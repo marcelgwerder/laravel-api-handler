@@ -1,21 +1,110 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
+use \Illuminate\Database\Eloquent\Relations\HasMany;
+use \Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Parser
 {
-	
-	private $queryBuilder;
-	private $queryBuilderOriginal;
-	private $queryParams;
 
-	public function __construct($queryBuilder, $queryParams)
+	/**
+	 * The builder Instance.
+	 *
+	 * @var mixed
+	 */
+	protected $builder;
+
+	/**
+	 * The original builder Instance.
+	 *
+	 * @var mixed
+	 */
+	protected $originalBuilder;
+
+	/**
+	 * The base query builder instance.
+	 *
+	 * @var \Illuminate\Database\Query\Builder
+	 */
+	protected $query;
+
+	/**
+	 * The http query params.
+	 *
+	 * @var array
+	 */
+	protected $params;
+
+	/**
+	 * All given fields
+	 *
+	 * @var array
+	 */
+	protected $additionalFields = array();
+
+	/**
+	 * If builder is an eloquent builder or not
+	 *
+	 * @var boolean
+	 */
+	protected $isEloquentBuilder = false;
+
+	/**
+	 * If builder is an query builder or not
+	 *
+	 * @var boolean
+	 */
+	protected $isQueryBuilder = false;
+
+	/**
+	 * Instantiate the Parser class
+	 * 
+	 * @param mixed 	$builder
+	 * @param array 	$params
+	 */
+	public function __construct($builder, $params)
 	{
-		$this->queryBuilder = $queryBuilder;
-		$this->queryParams = $queryParams;
+
+		$this->builder = $builder;
+		$this->params = $params;
+
+		$isEloquentModel = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
+		$this->isEloquentBuilder = $builder instanceof \Illuminate\Database\Eloquent\Builder;
+		$this->isQueryBuilder = $builder instanceof \Illuminate\Database\Query\Builder;
+
+		if($this->isEloquentBuilder) 
+		{
+   			$this->query = $builder->getQuery();
+		}
+		else if($isEloquentModel)
+		{
+			//Convert the model to a builder object
+			$this->builder = $builder->newQuery();
+
+			$this->query = $this->builder->getQuery();
+
+			$this->isEloquentBuilder = true;
+		}
+		else if($this->isQueryBuilder) 
+		{
+			$this->query = $builder;
+		}
+		else
+		{
+			throw new \InvalidArgumentException('The builder argument has to be of type Illuminate\Database\Eloquent\Builder or Illuminate\Database\Query\Builder');
+		}
+
+		$this->originalBuilder = clone $this->builder;
 	}
 
+	/**
+	 * Parse a single dataset, which needs no filtering or pagination and results in a object.
+	 * 
+	 * @param  int|array 						$identification	
+	 * @return Marcelgwerder\ApiHandler\Result          	
+	 */
 	public function single($identification) 
 	{
-		if(is_numeric($identification))
+		/*if(is_numeric($identification))
 		{
 			$this->queryBuilder->where('id', $identification);
 		}
@@ -24,119 +113,242 @@ class Parser
 			$this->queryBuilder->where($identification);
 		}
 
-
-		return new Result($queryBuilder, $meta);
+		return new Result($this->queryBuilder, $meta);*/
 	}	
 
 	/**
-	 * Handles the access to a collection (multiple datasets)
+	 * Parse multiple datasets that result in an array
 	 * 
-	 * @param  array  							$fullTextSearchColumns 	Columns which should be searched within the fulltext search
-	 * @return Marcelgwerder\ApiHandler\Result 	  						Result object which provides access to several getter functions
+	 * @param  array  							$fullTextSearchColumns 	
+	 * @return Marcelgwerder\ApiHandler\Result 	  					
 	 */
 	public function multiple($fullTextSearchColumns = array()) 
-	{
-		
-		$with = array();
-		$fields = array();
-
-		
-		//Parse and apply with elements using the Laravel "with" function 
-		if(isset($this->queryParams['with']))
-		{
-			$with = $this->parseWith($this->queryParams['with'], $fields);
-			call_user_func_array(array($this->queryBuilder, 'with'), $with);
-		}
-		
+	{	
 		//Parse and apply sort elements using the laravel "orderBy" function
-		if(isset($this->queryParams['sort']))
+		if(isset($this->params['sort']))
 		{
-			$sort = $this->parseSort($this->queryParams['sort']);
-
-			foreach ($sort as $pair) 
-			{
-				call_user_func_array(array($this->queryBuilder, 'orderBy'), $pair);
-			}
+			$this->parseSort($this->params['sort']);
 		}
 
-		//Parse and apply offset using the laravel "skip" function
-		if(isset($this->queryParams['offset']))
+		//Parse and apply offset using the laravel "offset" function
+		if(isset($this->params['offset']))
 		{
-			$offset = intval($this->queryParams['offset']);
-			$this->queryBuilder->skip($offset);
+			$offset = intval($this->params['offset']);
+			$this->query->offset($offset);
 		}
 
-		//Parse and apply limit using the laravel "take" function
-		if(isset($this->queryParams['limit']))
+		//Parse and apply limit using the laravel "limit" function
+		if(isset($this->params['limit']))
 		{
-			$limit = intval($this->queryParams['limit']);
-			$this->queryBuilder->take($limit);
+			$limit = intval($this->params['limit']);
+			$this->query->limit($limit);
 		}
 
 		//Parse and apply field elements using the laravel "select" function
 		//The needed fields for the with function (Primary and foreign keys) have to be added accordingly
-		if(isset($this->queryParams['fields']))
+		if(isset($this->params['fields']))
 		{
-			$fields = $this->parseFields($this->queryParams['fields'], $with);
-			call_user_func_array(array($this->queryBuilder, 'select'), $fields);
+			$this->parseFields($this->params['fields']);
+		}
+
+		//Parse and apply with elements using the Laravel "with" function 
+		if(isset($this->params['with']) && $this->isEloquentBuilder)
+		{
+			$this->parseWith($this->params['with']);
 		}
 
 		//Parse and apply the filters using the different laravel "where" functions
 		//Every parameter that has not a predefined functionality gets parsed as a filter
 		$filterParams = array_diff_key(
-			$this->queryParams, 
+			$this->params, 
 			array('fields' => false, 'sort' => false, 'limit' => false, 'offset' => false, 'meta' => false, 'with' => false)
 		);
 
 		if(count($filterParams) > 0)
 		{
-			$filters = $this->parseFilter($filterParams);
-			foreach ($filters as $filter) 
-			{
-				$this->queryBuilder->where(function($query) use($filter)
-	            {
-	                call_user_func_array(array($query, 'where'), $filter);
-	            });
-			}
+			$this->parseFilter($filterParams);
+		}
+
+		//Parse an apply the fulltext search using the different laravel "where" functions
+		//The fulltext search is only applied to the columns passed by $fullTextSearchColumns
+		if(isset($this->params['q']))
+		{
+			$this->parseFulltextSearch($this->queryParams['q'], $fullTextSearchColumns);
 		}
 
 		$metaData = array();
 
-		return new Result('multiple', $this->queryBuilder, $this->queryBuilderOriginal, $metaData);
+		if($this->isEloquentBuilder)
+		{
+			//Attach the query builder object back to the eloquent builder object
+			$this->builder->setQuery($this->query);
+		}
+
+		return new Result('multiple', $this->builder, $this->originalBuilder, $metaData);
 	}
 
 	/**
-	 * Parses the fields parameter and returns an array of fields
+	 * Parse the fields parameter and return an array of fields
 	 * 
-	 * @param  string 	$fieldsParam 	Query Parameter "fields"
-	 * @return array 	$fields      	Array with all fields
+	 * @param  string 	$fieldsParam 
+	 * @return void
 	 */
-	private function parseFields($fieldsParam, $with)
+	protected function parseFields($fieldsParam)
 	{
-		$fields = explode(',', $fieldsParam);
-		$fields = array_map('trim', $fields);
+		$fields = array();
 
-		return $fields;
-	}
+		foreach(explode(',', $fieldsParam) as $field)
+		{
+			//Only add the fields that are on the base resource
+			if(strpos($field, '.') === false)
+			{
+				$fields[] = trim($field);
+			}
+			else 
+			{
+				$this->additionalFields[] = trim($field);
+			}
+		}
 
-	private function parseWith($withParam)
-	{
-		$with = explode(',', $withParam);
-		$with = array_map('trim', $with);
-
-		return $with;
+		$this->query->select($fields);
 	}
 
 	/**
-	 * Parses the sort param and determines whether the sorting is ascending or descending.
-	 * A descending sort has a leading "-".
+	 * Parse the with parameter and return an array of relations
 	 * 
-	 * @param  string 	$sortParam 	String containg the sorting 
-	 * @return array[]  $sort       Multidimensional array containing all sort pairs (column and direction)
+	 * @param  string 	$withParam 
+	 * 
+	 * @return void
 	 */
-	private function parseSort($sortParam)
+	protected function parseWith($withParam)
 	{
-		$sort = array();
+		$fields = $this->query->columns;
+		$fieldsCount = count($fields);
+		$baseModel = $this->builder->getModel();
+
+		$withHistory = array();
+
+		foreach(explode(',', $withParam) as $with)
+		{
+			//Use ArrayObject to be able to copy the array (for array_splice)
+			$parts = new \ArrayObject(explode('.', $with));
+			$lastKey = count($parts)-1;
+
+			for($i = 0; $i <= $lastKey; $i++)
+			{
+				$part = $parts[$i];
+				$partsCopy = $parts->getArrayCopy();
+
+				//Get the previous history path (e.g. if current is a.b.c the previous is a.b)
+				$previousHistoryPath = implode('.', array_splice($partsCopy, 0, $i));
+				//Get the current history part based on the previous one
+				$currentHistoryPath = $previousHistoryPath ? $previousHistoryPath.'.'.$part : $part;
+
+				//Create new history element
+				if(!isset($withHistory[$currentHistoryPath]))
+				{
+					$withHistory[$currentHistoryPath] = array(
+						'fields' => array()
+					);
+				}
+
+				//Get all given fields related to the current part
+				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($val) use($part) {
+					return preg_match('/'.$part.'\..+$/', $val);
+				});
+
+				if(!isset($previousModel))
+				{
+					$previousModel = $baseModel;
+				}
+				
+				$relation = call_user_func(array($previousModel, $part));
+
+
+				$model = $relation->getModel();
+				
+				$primaryKey = 'id';
+				$foreignKey = $relation->getForeignKey();
+
+				$relationType = $this->getRelationType($relation);
+
+				//Switch keys according to the type of relationship
+				if($relationType == 'HasMany')
+				{
+					$firstKey = $primaryKey;
+					$secondKey = $foreignKey;
+				}
+				else if($relationType == 'BelongsTo')
+				{
+					$firstKey = $foreignKey;
+					$secondKey = $primaryKey;
+				}
+				
+				//Check if we're on level 1 (e.g. a and not a.b)
+				if($previousHistoryPath == '')
+				{
+					if($fieldsCount > 0 && !in_array($primaryKey, $fields))
+					{
+						$fields[] = $firstKey;
+					}
+				}
+				else 
+				{
+					if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
+					{
+						$withHistory[$previousHistoryPath]['fields'][] = $firstKey;
+					}
+				}
+
+				if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
+				{
+					$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
+				}
+
+				$previousModel = $model;
+				
+			}
+
+			unset($previousModel);
+		}
+
+		//Apply the withHistory to using the laravel "with" function
+		$withsArr = array();
+
+		foreach($withHistory as $withHistoryKey => $withHistoryValue)
+		{
+			$withsArr[$withHistoryKey] = function($query) use ($withHistory, $withHistoryKey){
+
+				//Reduce values to fieldname
+				$fields = array_map(function($val) {
+					$pos = strpos($val, '.');
+					return $pos !== false ? substr($val, $pos+1) : $val;
+				}, $withHistory[$withHistoryKey]['fields']);
+				
+				if(count($fields) > 0 && is_array($fields))
+				{
+					$query->select($fields);
+				}
+
+			};
+		}
+
+
+		$this->builder->with($withsArr);
+
+		//Renew base fields
+		$this->query->addSelect($fields);
+	}
+
+	/**
+	 * Parse the sort param and determine whether the sorting is ascending or descending.
+	 * A descending sort has a leading "-". Apply it to the query.
+	 * 
+	 * @param  string 	$sortParam 
+	 * @return void 
+	 */
+	protected function parseSort($sortParam)
+	{
 		$sortElems = explode(',', $sortParam);
 
 		foreach($sortElems as $sortElem) 
@@ -151,57 +363,129 @@ class Parser
 				$direction = 'asc';
 			}
 
-			$sort[] = array(preg_replace('/^-/', '', $sortElem), $direction);
+			$pair = array(preg_replace('/^-/', '', $sortElem), $direction);
+			call_user_func_array(array($this->query, 'orderBy'), $pair);
 
 		}
-
-		return $sort;
 	}
 
 	/**
-	 * Parses the remaining filter params
+	 * Parse the remaining filter params
 	 * 
-	 * @param  array 		$filterParams 	Array of all non predefined parameters  
-	 * @return array[]   	$filters       	Array of all filters and their settings
+	 * @param  array 		$filterParams 
+	 * 
+	 * @return void
 	 */
-	private function parseFilter($filterParams) 
+	protected function parseFilter($filterParams) 
 	{
-		$filters = array();
+		$supportedPrefixesStr = array();
 
-		foreach ($filterParams as $filterParamKey => $filterParamValue) 
+		$supportedPostfixes = array(
+			'st' => '<', 
+			'gt' => '>', 
+			'min' => '>=', 
+			'max' => '<=', 
+			'lk' => 'LIKE',
+			'not-lk' => 'NOT LIKE',
+			'not' => '!=',
+		);
+		
+		$supportedPrefixesStr = implode('|', $supportedPostfixes);
+		$supportedPostfixesStr = implode('|', array_keys($supportedPostfixes));
+
+		foreach($filterParams as $filterParamKey => $filterParamValue) 
 		{
-			$comparator = '=';
-			$comparatorMatches = array();
+			$keyMatches = array();
+			
+			//Matches every parameter with an optional prefix and/or postfix
+			//e.g. not-title-lk, title-lk, not-title, title 
+			$keyRegex = '/^(?:('.$supportedPrefixesStr.')-)?(.*?)(?:-('.$supportedPostfixesStr.')|$)/';
 
-			preg_match_all('/-(st|gt|min|max|lk)?$/', $filterParamKey, $comparatorMatches);
+			preg_match($keyRegex, $filterParamKey, $keyMatches);
 
-			if(!isset($comparatorMatches[0][0]))
+			if(!isset($keyMatches[3]))
 			{
-				$column = $filterParamKey;
 				$comparator = '=';
 			}
 			else
 			{
-				$comparatorSearch = array('st', 'gt', 'min', 'max', 'lk', '');
-				$comparatorReplace = array('<', '>', '>=', '<=', 'LIKE', '=');
-
-				$column = str_replace($comparatorMatches[0][0], '', $filterParamKey);
-				$comparator = str_replace($comparatorSearch, $comparatorReplace, $comparatorMatches[1][0]);
+				$comparator = $supportedPostfixes[$keyMatches[3]];
 			}
 
-			$filters[] = array($column, $comparator, $filterParamValue);  
+			$column = $keyMatches[2];
+
+		 	$values = explode('|', $filterParamValue);
+
+		 	if(count($values) > 1)
+		 	{
+				$this->query->where(function($query) use($column, $comparator, $values)
+		        {
+		            foreach($values as $value)
+		            {
+		            	
+		            	//Link the filters with AND of there is a "not" and with OR if there's none
+		            	if($comparator == '!=' || $comparator == 'NOT LIKE')
+		            	{
+		            		$query->where($column, $comparator, $value);
+		            	}
+		            	else 
+		            	{
+		            		$query->orWhere($column, $comparator, $value);
+		            	}
+		            }
+		        });
+			}
+			else 
+			{
+				$value = $values[0];
+				$this->query->where($column, $comparator, $value);
+			}
 		}
-
-		return $filters;
 	}
 
-	private function parseFulltextSearch($qParam, $search)
+	/**
+	 * Parse the fulltext search parameter q
+	 * @param  string 	$qParam 
+	 * @param  array 	$fullTextSearchColumns
+	 * 
+	 * @return void
+	 */
+	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
 	{
-		return $search;
+		$fullTextSearch = array();
+		$keywords = explode(' ', $qParam);
+
+		foreach($fullTextSearchColumns as $column)
+		{
+			foreach($keywords as $keyword)
+	        {
+	            $this->query->orWhere($column, 'LIKE', '%'.$keyword.'%');
+	        }
+		}
 	}
 
-	private function parseMeta($metaParam)
+	protected function parseMeta($metaParam)
 	{
 		return $meta;
+	}
+
+	/**
+	 * Determine the type of the Eloquent relation
+	 * 
+	 * @param  Illuminate\Database\Eloquent\Relations\Relation $relation
+	 * 
+	 * @return string        
+	 */
+	protected function getRelationType($relation)
+	{
+		if($relation instanceof HasMany)
+		{
+			return 'HasMany';
+		}
+
+		if($relation instanceof BelongsTo)
+		{
+			return 'BelongsTo';
+		}
 	}
 }
