@@ -2,12 +2,11 @@
 
 class UndefinedFieldException extends ApiHandlerException
 {
-    protected $httpStatusCode = 422;
-    protected $code = 2;
-
     public function __construct($field) 
     {
-    	$message = 'The field \''.$field.'\' is not available for this api resource';
-        parent::__construct($message);
+        $config = Config::getError('type', 'UndefinedField');
+        $code = $config['code'];
+
+        parent::__construct($code, '', array('field' => $field));
     }
 }

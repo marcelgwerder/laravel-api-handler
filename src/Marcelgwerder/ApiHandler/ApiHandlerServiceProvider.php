@@ -37,6 +37,7 @@ class ApiHandlerServiceProvider extends ServiceProvider {
 		{
 		  $loader = \Illuminate\Foundation\AliasLoader::getInstance();
 		  $loader->alias('ApiHandler', 'Marcelgwerder\ApiHandler\Facades\ApiHandler');
+		  $loader->alias('ApiHandlerException', 'Marcelgwerder\ApiHandler\ApiHandlerException');
 		});
 	}
 

@@ -6,33 +6,15 @@ use Illuminate\Database\QueryException;
 class Result
 {
 	/**
-	 * The builder Instance.
+	 * Parser instance.
 	 *
-	 * @var mixed
+	 * @var Marcelgwerder\ApiHandler\Parser
 	 */
-	protected $builder;
+	protected $parser;
 
-	/**
-	 * The original builder Instance.
-	 *
-	 * @var mixed
-	 */
-	protected $originalBuilder;
-	
-	/**
-	 * An array of headers
-	 *
-	 * @var array
-	 */
-	protected $headers;
-
-
-	public function __construct($type, $builder, $originalBuilder, $metaData)
+	public function __construct($parser)
 	{
-		$this->type = $type;
-		$this->builder = $builder;
-		$this->originalBuilder = $originalBuilder;
-		$this->headers = $metaData;
+		$this->parser = $parser;
 	}
 
 	/**
@@ -57,13 +39,13 @@ class Result
 	{
 		try
 		{
-			if($this->type == 'single')
+			if($this->parser->multiple)
 			{
-				$result = $this->builder->first();
+				$result = $this->parser->builder->get();
 			}
-			else if($this->type == 'multiple')
+			else
 			{
-				$result = $this->builder->get();
+				$result = $this->parser->builder->first();
 			}
 		}
 		catch(\BadMethodCallException $e)
@@ -85,7 +67,6 @@ class Result
 
 			if($code == '42S22')
 			{
-				//Undefined column
 				preg_match('/Unknown column \'([^\']+)/i', $message, $matches);
 
 				$field = $matches[1];
@@ -106,7 +87,7 @@ class Result
 	 */
 	public function getBuilder()
 	{
-		return $this->queryBuilder;
+		return $this->parser->builder;
 	}
 
 	/**
@@ -116,6 +97,14 @@ class Result
 	 */
 	public function getHeaders()
 	{
-		return $this->headers;
+		$meta = $this->parser->meta;
+		$headers = array();
+
+		foreach($meta as $provider)
+		{
+			$headers[$provider->getTitle()] = $provider->get();
+		}
+
+		return $headers;
 	}
 }

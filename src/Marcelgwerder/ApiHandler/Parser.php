@@ -11,14 +11,28 @@ class Parser
 	 *
 	 * @var mixed
 	 */
-	protected $builder;
+	public $builder;
 
 	/**
 	 * The original builder Instance.
 	 *
 	 * @var mixed
 	 */
-	protected $originalBuilder;
+	public $originalBuilder;
+
+	/**
+	 * The parsed meta information
+	 *
+	 * @var array
+	 */
+	public $meta = array();
+
+	/**
+	 * If the parser works on multiple datasets
+	 *
+	 * @var boolean
+	 */
+	public $multiple;
 
 	/**
 	 * The base query builder instance.
@@ -97,51 +111,72 @@ class Parser
 	}
 
 	/**
-	 * Parse a single dataset, which needs no filtering or pagination and results in a object.
+	 * Parse the query parameters with the given options.
+	 * Either for a single dataset or multiple.
 	 * 
-	 * @param  int|array 						$identification	
-	 * @return Marcelgwerder\ApiHandler\Result          	
+	 * @param  mixed  	$options  
+	 * @param  boolean 	$multiple
+	 * @return void    
 	 */
-	public function single($identification) 
+	public function parse($options, $multiple = false)
 	{
-		/*if(is_numeric($identification))
-		{
-			$this->queryBuilder->where('id', $identification);
-		}
-		else if(is_array($identification))
-		{
-			$this->queryBuilder->where($identification);
-		}
+		$this->multiple = $multiple;
 
-		return new Result($this->queryBuilder, $meta);*/
-	}	
-
-	/**
-	 * Parse multiple datasets that result in an array
-	 * 
-	 * @param  array  							$fullTextSearchColumns 	
-	 * @return Marcelgwerder\ApiHandler\Result 	  					
-	 */
-	public function multiple($fullTextSearchColumns = array()) 
-	{	
-		//Parse and apply sort elements using the laravel "orderBy" function
-		if(isset($this->params['sort']))
+		if($multiple)
 		{
-			$this->parseSort($this->params['sort']);
-		}
+			$fullTextSearchColumns = $options;
 
-		//Parse and apply offset using the laravel "offset" function
-		if(isset($this->params['offset']))
-		{
-			$offset = intval($this->params['offset']);
-			$this->query->offset($offset);
-		}
+			//Parse and apply sort elements using the laravel "orderBy" function
+			if(isset($this->params['sort']))
+			{
+				$this->parseSort($this->params['sort']);
+			}
 
-		//Parse and apply limit using the laravel "limit" function
-		if(isset($this->params['limit']))
+			//Parse and apply offset using the laravel "offset" function
+			if(isset($this->params['offset']))
+			{
+				$offset = intval($this->params['offset']);
+				$this->query->offset($offset);
+			}
+
+			//Parse and apply limit using the laravel "limit" function
+			if(isset($this->params['limit']))
+			{
+				$limit = intval($this->params['limit']);
+				$this->query->limit($limit);
+			}
+
+			//Parse and apply the filters using the different laravel "where" functions
+			//Every parameter that has not a predefined functionality gets parsed as a filter
+			$filterParams = array_diff_key(
+				$this->params, 
+				array('fields' => false, 'sort' => false, 'limit' => false, 'offset' => false, 'meta' => false, 'with' => false, 'q' => false)
+			);
+
+			if(count($filterParams) > 0)
+			{
+				$this->parseFilter($filterParams);
+			}
+
+			//Parse an apply the fulltext search using the different laravel "where" functions
+			//The fulltext search is only applied to the columns passed by $fullTextSearchColumns
+			if(isset($this->params['q']))
+			{
+				$this->parseFulltextSearch($this->params['q'], $fullTextSearchColumns);
+			}
+		} 
+		else
 		{
-			$limit = intval($this->params['limit']);
-			$this->query->limit($limit);
+			$identification = $options;
+
+			if(is_numeric($identification))
+			{
+				$this->query->where('id', $identification);
+			}
+			else if(is_array($identification))
+			{
+				$this->query->where($identification);
+			}
 		}
 
 		//Parse and apply field elements using the laravel "select" function
@@ -155,36 +190,19 @@ class Parser
 		if(isset($this->params['with']) && $this->isEloquentBuilder)
 		{
 			$this->parseWith($this->params['with']);
-		}
+		}		
 
-		//Parse and apply the filters using the different laravel "where" functions
-		//Every parameter that has not a predefined functionality gets parsed as a filter
-		$filterParams = array_diff_key(
-			$this->params, 
-			array('fields' => false, 'sort' => false, 'limit' => false, 'offset' => false, 'meta' => false, 'with' => false)
-		);
-
-		if(count($filterParams) > 0)
+		//Parse and apply the meta data
+		if(isset($this->params['meta']))
 		{
-			$this->parseFilter($filterParams);
+			$this->parseMeta($this->params['meta']);
 		}
-
-		//Parse an apply the fulltext search using the different laravel "where" functions
-		//The fulltext search is only applied to the columns passed by $fullTextSearchColumns
-		if(isset($this->params['q']))
-		{
-			$this->parseFulltextSearch($this->queryParams['q'], $fullTextSearchColumns);
-		}
-
-		$metaData = array();
 
 		if($this->isEloquentBuilder)
 		{
 			//Attach the query builder object back to the eloquent builder object
 			$this->builder->setQuery($this->query);
 		}
-
-		return new Result('multiple', $this->builder, $this->originalBuilder, $metaData);
 	}
 
 	/**
@@ -214,7 +232,7 @@ class Parser
 	}
 
 	/**
-	 * Parse the with parameter and return an array of relations
+	 * Parse the with parameter
 	 * 
 	 * @param  string 	$withParam 
 	 * 
@@ -337,7 +355,10 @@ class Parser
 		$this->builder->with($withsArr);
 
 		//Renew base fields
-		$this->query->addSelect($fields);
+		if(count($fields) > 0)
+		{
+			$this->query->addSelect($fields);
+		}
 	}
 
 	/**
@@ -445,6 +466,7 @@ class Parser
 
 	/**
 	 * Parse the fulltext search parameter q
+	 * 
 	 * @param  string 	$qParam 
 	 * @param  array 	$fullTextSearchColumns
 	 * 
@@ -452,21 +474,43 @@ class Parser
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
 	{
-		$fullTextSearch = array();
 		$keywords = explode(' ', $qParam);
 
-		foreach($fullTextSearchColumns as $column)
+		$this->query->where(function($query) use($fullTextSearchColumns, $keywords)
 		{
-			foreach($keywords as $keyword)
-	        {
-	            $this->query->orWhere($column, 'LIKE', '%'.$keyword.'%');
-	        }
-		}
+			foreach($fullTextSearchColumns as $column)
+			{
+				foreach($keywords as $keyword)
+		        {
+		            $query->orWhere($column, 'LIKE', '%'.$keyword.'%');
+		        }
+			}
+		});
 	}
 
+	/**
+	 * Parse the meta parameter and prepare an array of meta provider objects.
+	 * 
+	 * @param  array 	$metaParam 
+	 * @return void
+	 */
 	protected function parseMeta($metaParam)
 	{
-		return $meta;
+		$metaitems = explode(',',$metaParam);
+
+		foreach($metaitems as $metaitem)
+		{
+			$metaitem = trim($metaitem);
+
+			if($metaitem == 'total-count')
+			{
+				$this->meta[] = new CountMetaProvider($metaitem, $this->originalBuilder);
+			}
+			else if($metaitem == 'filter-count')
+			{	
+				$this->meta[] = new CountMetaProvider($metaitem, $this->builder);
+			}
+		}
 	}
 
 	/**

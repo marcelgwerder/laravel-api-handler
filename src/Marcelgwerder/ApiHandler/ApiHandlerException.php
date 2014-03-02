@@ -2,15 +2,42 @@
 
 class ApiHandlerException extends \Exception
 {
-    protected $httpStatusCode = 500;
+	protected $type;
+	protected $display;
+	protected $httpCode;
 
-    public function __construct($message, $code = 0) 
+    public function __construct($code, $display = '', $replacements = array()) 
     {
+    	$config = Config::getError('code', $code);
+
+    	$this->type = $config['type'];
+    	$this->httpCode = $config['http_code'];  
+    	$this->display = $display;
+
+        $message = $config['message'];
+
+        //Replace placeholders in $display and $message
+        foreach ($replacements as $replacementKey => $replacement) 
+        {
+        	$message = str_replace(':'.$replacementKey, $replacement, $message);
+        	$display = str_replace(':'.$replacementKey, $replacement, $display);
+        }
+
         parent::__construct($message, $code);
     }
 
-    public function getHttpStatusCode()
+    public function getType()
     {
-    	return $this->httpStatusCode;
+    	return $this->type;
+    }
+
+    public function getDisplay()
+    {
+    	return $this->display;
+    }
+
+    public function getHttpCode()
+    {
+    	return $this->httpCode;
     }
 }
