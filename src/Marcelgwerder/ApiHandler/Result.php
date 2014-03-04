@@ -55,9 +55,14 @@ class Result
 
 			preg_match('/::(.+)\(\)$/', $message, $matches);
 
-			$relation = $matches[1];
+			if(isset($matches[1]))
+			{
+				$relation = $matches[1];
 
-			throw new UndefinedRelationException($relation);
+				throw new UndefinedRelationException($relation);
+			}
+
+			throw $e;
 		}
 		catch(QueryException $e)
 		{
@@ -69,9 +74,14 @@ class Result
 			{
 				preg_match('/Unknown column \'([^\']+)/i', $message, $matches);
 
-				$field = $matches[1];
+				if(isset($matches[1]))
+				{
+					$field = $matches[1];
 
-				throw new UndefinedFieldException($field);
+					throw new UndefinedFieldException($field);
+				}
+
+				throw $e;
 			}
 
 			throw $e;

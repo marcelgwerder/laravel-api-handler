@@ -29,7 +29,7 @@ class ApiHandler
 	 */
 	public static function parseSingle($queryBuilder, $identification, $queryParams = false)
 	{
-		if(!$queryParams) $queryParams = Input::get();
+		if($queryParams === false) $queryParams = Input::get();
 
 		$parser = new Parser($queryBuilder, $queryParams);
 		$parser->parse($identification);
@@ -47,7 +47,7 @@ class ApiHandler
 	 */
 	public static function parseMultiple($queryBuilder, $fullTextSearchColumns = array(), $queryParams = false)
 	{
-		if(!$queryParams) $queryParams = Input::get();
+		if($queryParams === false) $queryParams = Input::get();
 
 		$parser = new Parser($queryBuilder, $queryParams);
 		$parser->parse($fullTextSearchColumns, true);
