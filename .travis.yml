@@ -11,7 +11,7 @@ env:
   - LARAVEL_VERSION="dev-master" PHP_VERSION=">=5.4.0"
 
 install:
-  - check_build.php ${LARAVEL_VERSION}
+  - php check_build.php ${LARAVEL_VERSION}
   - composer require laravel/framework:${LARAVEL_VERSION}
   - composer require php:${PHP_VERSION}
 
