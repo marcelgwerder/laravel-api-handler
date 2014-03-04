@@ -1,17 +1,14 @@
 language: php
 
 php: 
-  - "5.3"
   - "5.4"
   - "5.5"
 
 env:
-  - LARAVEL_VERSION="4.0.*" PHP_VERSION=">=5.3.0"
-  - LARAVEL_VERSION="4.1.*"	PHP_VERSION=">=5.4.0"
+  - LARAVEL_VERSION="4.1.*"	PHP_VERSION=">=5.3.0"
   - LARAVEL_VERSION="dev-master" PHP_VERSION=">=5.4.0"
 
 install:
-  - php check_build.php ${LARAVEL_VERSION}
   - composer require laravel/framework:${LARAVEL_VERSION}
   - composer require php:${PHP_VERSION}
 
