@@ -1,4 +1,5 @@
 ##Laravel API Handler##
+[![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler)
 
 This is going to be a helper package which provides functionality for url parsing and response handling on a Laravel REST-API.
 

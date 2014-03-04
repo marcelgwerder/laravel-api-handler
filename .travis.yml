@@ -5,15 +5,11 @@ php:
   - "5.5"
 
 env:
-  - LARAVEL_VERSION="4.1.*"	PHP_VERSION=">=5.3.0"
-  - LARAVEL_VERSION="dev-master" PHP_VERSION=">=5.4.0"
-
-install:
-  - composer require laravel/framework:${LARAVEL_VERSION}
-  - composer require php:${PHP_VERSION}
+  - LARAVEL_VERSION="4.1.*"
+  - LARAVEL_VERSION="dev-master"
 
 before_script:
-  - curl -s http://getcomposer.org/installer | php
-  - php composer.phar install --dev
+  - composer self-update
+  - composer install --prefer-source --no-interaction --dev
 
 script: phpunit
