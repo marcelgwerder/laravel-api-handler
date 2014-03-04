@@ -5,6 +5,14 @@ php:
   - 5.4
   - 5.5
 
+env:
+  - LARAVEL_VERSION="4.0.*""
+  - LARAVEL_VERSION="4.1.*"
+  - LARAVEL_VERSION="dev-master"
+
+install:
+  - composer require laravel/framework:${LARAVEL_VERSION}
+
 before_script:
   - curl -s http://getcomposer.org/installer | php
   - php composer.phar install --dev
