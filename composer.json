@@ -21,7 +21,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "git://github.com/orchestral/phpseclib.git"
+            "url": "https://github.com/orchestral/phpseclib.git"
         }
     ],
     "autoload": {
