@@ -33,19 +33,6 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
     }
-
-    public function testGetHeaders()
-    {
-       /* $post = new Post();
-
-        $params = array(
-            'meta' => 'total-count,filter-count'
-        );
-
-        $headers = ApiHandler::parseMultiple($post, array('title','description'), $params)->getResponse();
-
-        var_dump($headers);*/
-    }
    
     public function testGetBuilder()
     {    
@@ -53,7 +40,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
         $params = array(
             //Fields
-            'fields' => 'id,title',
+            'fields' => 'title,description,comments.title,user.first_name',
             //Filters
             'title-lk' => 'Example Title|Another Title',
             'title' => 'Example Title',
@@ -66,9 +53,14 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             //Pagination
             'limit' => 5,
             'offset' => 10,
+            //With
+            'with' => 'comments.user',
+            //Sort
+            'sort' => '-title,first_name'
         );
 
-        $queryBuilder = ApiHandler::parseMultiple($post, array('title','description'), $params)->getBuilder()->getQuery();
+        $builder = ApiHandler::parseMultiple($post, array('title','description'), $params)->getBuilder();
+        $queryBuilder = $builder->getQuery();
 
         //
         // Fields
@@ -76,7 +68,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         
         $columns = $queryBuilder->columns;
 
-        $this->assertContains('id', $columns);
+        $this->assertContains('description', $columns);
         $this->assertContains('title', $columns);
 
         //
@@ -139,6 +131,43 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         
         $offset = $queryBuilder->offset;
         $this->assertEquals($params['offset'], $offset);
+
+        //
+        // Sort
+        //
+
+        $orders = $queryBuilder->orders;
+        $this->assertContains(array('column' => 'title', 'direction' => 'desc'), $orders);
+        $this->assertContains(array('column' => 'first_name', 'direction' => 'asc'), $orders);
+
+        //
+        //With
+        //
+        
+        $eagerLoads = $builder->getEagerLoads();
+
+        $this->assertArrayHasKey('comments', $eagerLoads);
+        $this->assertArrayHasKey('comments.user', $eagerLoads);
+
+        //Check if auto fields are set on the base query
+        $this->assertContains('id', $columns);
+
+        //Check if fields are set on the "comments" relation query 
+        $query = $post->newQuery(); 
+        call_user_func($eagerLoads['comments'], $query);
+        $columns = $query->getQuery()->columns;
+
+        $this->assertContains('title', $columns);
+        $this->assertContains('customfk_post_id', $columns);
+        $this->assertContains('user_id', $columns);
+
+        //Check if fields are set on the "comments.user" relation query 
+        $query = $post->newQuery(); 
+        call_user_func($eagerLoads['comments.user'], $query);
+        $columns = $query->getQuery()->columns;
+        
+        $this->assertContains('id', $columns);
+        $this->assertContains('first_name', $columns);
 
     }
 

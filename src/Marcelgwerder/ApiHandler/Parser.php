@@ -228,7 +228,10 @@ class Parser
 			}
 		}
 
-		$this->query->select($fields);
+		if(count($fields) > 0)
+		{
+			$this->query->select($fields);
+		}
 	}
 
 	/**

@@ -18,6 +18,12 @@
         "phpunit/phpunit": "3.7.*",
         "mockery/mockery": "0.9.*@dev"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git://github.com/orchestral/phpseclib.git"
+        }
+    ],
     "autoload": {
         "classmap": [
             "src/migrations"

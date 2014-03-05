@@ -9,6 +9,6 @@ class Post extends \Illuminate\Database\Eloquent\Model
 
 	public function comments()
 	{
-		return $this->hasMany('Comment');
+		return $this->hasMany('Comment', 'customfk_post_id');
 	}
 }
