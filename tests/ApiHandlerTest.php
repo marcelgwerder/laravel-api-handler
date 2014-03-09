@@ -8,7 +8,53 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        //Fake the connection the same way as laravel does:
+        parent::setUp();
+
+        //Test parameters
+        $this->params = array(
+            //Fields
+            '_fields'       => 'title,description,comments.title,user.first_name',
+            //Filters
+            'title-lk'      => 'Example Title|Another Title',
+            'title'         => 'Example Title',
+            'title-not-lk'  => 'Example Title',
+            'title-not'     => 'Example Title|Another Title',
+            'id-min'        => 5,
+            'id-max'        => 6,
+            'id-gt'         => 7,
+            'id-st'         => 8,
+            //Pagination
+            '_limit'        => 5,
+            '_offset'       => 10,
+            //With
+            '_with'         => 'comments.user',
+            //Sort
+            '_sort'         => '-title,first_name',
+            //Config
+            '_config'       => 'mode-default,meta-filter-count,meta-total-count'
+        );
+
+        //Mock the application
+        $app = m::mock('AppMock');
+        $app->shouldReceive('instance')->once()->andReturn($app);
+        Illuminate\Support\Facades\Facade::setFacadeApplication($app);
+
+        //Mock the config
+        $config = m::mock('ConfigMock');
+        $config->shouldReceive('get')->once()
+               ->with('api-handler::prefix')->andReturn('_');
+
+        //Mock the input
+        $input = m::mock('InputMock');
+        $input->shouldReceive('get')->once()
+              ->with()->andReturn($this->params); 
+
+        //Mock the response
+        $response = m::mock('ResponseMock');
+        $response->shouldReceive('json')->once()
+                 ->with()->andReturn($this->params); 
+
+        //Mock the connection the same way as laravel does:
         //tests/Database/DatabaseEloquentBuilderTest.php#L408-L418 (mockConnectionForModel($model, $database))
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
@@ -16,12 +62,18 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', array('connection' => $connection));
 
         Post::setConnectionResolver($resolver);
+
+        $this->apiHandler = new ApiHandler();
+        $this->apiHandler->setConfigHandler($config);
+        $this->apiHandler->setInputHandler($input);
+        $this->apiHandler->setResponseHandler($response);
+
     }
     
     public function testParseSingle()
     {
         $post = new Post();
-        $result = ApiHandler::parseSingle($post, 5, array());
+        $result = $this->apiHandler->parseSingle($post, 5, array());
 
         $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
     }
@@ -29,37 +81,17 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
     public function testParseMultiple()
     {
         $post = new Post();
-        $result = ApiHandler::parseMultiple($post, array(), array());
+        $result = $this->apiHandler->parseMultiple($post, array(), array());
 
         $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
     }
    
     public function testGetBuilder()
     {    
+
         $post = new Post();
 
-        $params = array(
-            //Fields
-            'fields' => 'title,description,comments.title,user.first_name',
-            //Filters
-            'title-lk' => 'Example Title|Another Title',
-            'title' => 'Example Title',
-            'title-not-lk' => 'Example Title',
-            'title-not' => 'Example Title|Another Title',
-            'id-min' => 5,
-            'id-max' => 6,
-            'id-gt' => 7,
-            'id-st' => 8,
-            //Pagination
-            'limit' => 5,
-            'offset' => 10,
-            //With
-            'with' => 'comments.user',
-            //Sort
-            'sort' => '-title,first_name'
-        );
-
-        $builder = ApiHandler::parseMultiple($post, array('title','description'), $params)->getBuilder();
+        $builder = $this->apiHandler->parseMultiple($post, array('title','description'), $this->params)->getBuilder();
         $queryBuilder = $builder->getQuery();
 
         //
@@ -123,14 +155,14 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //
         
         $limit = $queryBuilder->limit;
-        $this->assertEquals($params['limit'], $limit);
+        $this->assertEquals($this->params['_limit'], $limit);
 
         //
         // Offset
         //
         
         $offset = $queryBuilder->offset;
-        $this->assertEquals($params['offset'], $offset);
+        $this->assertEquals($this->params['_offset'], $offset);
 
         //
         // Sort

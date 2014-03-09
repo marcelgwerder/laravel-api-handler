@@ -1,6 +1,8 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Input;
 
 class ApiHandlerServiceProvider extends ServiceProvider {
 
@@ -30,7 +32,14 @@ class ApiHandlerServiceProvider extends ServiceProvider {
 	{
 		$this->app['ApiHandler'] = $this->app->share(function($app)
 		{
-			return new ApiHandler;
+			$apiHandler = new ApiHandler();
+
+			$apiHandler->setInputHandler(new Input);
+			$apiHandler->setResponseHandler(new Response);
+			$apiHandler->setConfigHandler($app['config']);
+
+			return $apiHandler;
+
 		});
 
 		$this->app->booting(function()

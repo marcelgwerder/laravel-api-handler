@@ -22,6 +22,6 @@ class CountMetaProvider extends MetaProvider
 	 */
 	public function get()
 	{
-		return $this->builder->count();
+		return intval($this->builder->count());
 	}
 }

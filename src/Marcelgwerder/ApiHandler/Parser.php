@@ -35,6 +35,13 @@ class Parser
 	public $multiple;
 
 	/**
+	 * The mode for the response (count,default)
+	 *
+	 * @var string
+	 */
+	public $mode = 'default';
+
+	/**
 	 * The base query builder instance.
 	 *
 	 * @var \Illuminate\Database\Query\Builder
@@ -47,6 +54,18 @@ class Parser
 	 * @var array
 	 */
 	protected $params;
+
+	/**
+	 * Predefined functions
+	 *
+	 * @var array
+	 */
+	protected $functions = array('fields', 'sort', 'limit', 'offset','config', 'with', 'q');
+
+	/**
+	 * All functional params
+	 */
+	protected $functionalParams;
 
 	/**
 	 * All given fields
@@ -75,11 +94,14 @@ class Parser
 	 * @param mixed 	$builder
 	 * @param array 	$params
 	 */
-	public function __construct($builder, $params)
+	public function __construct($builder, $params, $config)
 	{
 
 		$this->builder = $builder;
 		$this->params = $params;
+		$this->config = $config;
+
+		$this->prefix = $this->config->get('api-handler::prefix');
 
 		$isEloquentModel = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
 		$this->isEloquentBuilder = $builder instanceof \Illuminate\Database\Eloquent\Builder;
@@ -127,42 +149,37 @@ class Parser
 			$fullTextSearchColumns = $options;
 
 			//Parse and apply sort elements using the laravel "orderBy" function
-			if(isset($this->params['sort']))
+			if($sort = $this->getParam('sort'))
 			{
-				$this->parseSort($this->params['sort']);
+				$this->parseSort($sort);
 			}
 
 			//Parse and apply offset using the laravel "offset" function
-			if(isset($this->params['offset']))
+			if($offset = $this->getParam('offset'))
 			{
-				$offset = intval($this->params['offset']);
+				$offset = intval($offset);
 				$this->query->offset($offset);
 			}
 
 			//Parse and apply limit using the laravel "limit" function
-			if(isset($this->params['limit']))
+			if($limit = $this->getParam('limit'))
 			{
-				$limit = intval($this->params['limit']);
+				$limit = intval($limit);
 				$this->query->limit($limit);
 			}
 
 			//Parse and apply the filters using the different laravel "where" functions
 			//Every parameter that has not a predefined functionality gets parsed as a filter
-			$filterParams = array_diff_key(
-				$this->params, 
-				array('fields' => false, 'sort' => false, 'limit' => false, 'offset' => false, 'meta' => false, 'with' => false, 'q' => false)
-			);
-
-			if(count($filterParams) > 0)
+			if($filterParams = $this->getFilterParams())
 			{
 				$this->parseFilter($filterParams);
 			}
 
 			//Parse an apply the fulltext search using the different laravel "where" functions
 			//The fulltext search is only applied to the columns passed by $fullTextSearchColumns
-			if(isset($this->params['q']))
+			if($q = $this->getParam('q'))
 			{
-				$this->parseFulltextSearch($this->params['q'], $fullTextSearchColumns);
+				$this->parseFulltextSearch($q, $fullTextSearchColumns);
 			}
 		} 
 		else
@@ -181,21 +198,21 @@ class Parser
 
 		//Parse and apply field elements using the laravel "select" function
 		//The needed fields for the with function (Primary and foreign keys) have to be added accordingly
-		if(isset($this->params['fields']))
+		if($fields = $this->getParam('fields'))
 		{
-			$this->parseFields($this->params['fields']);
+			$this->parseFields($fields);
 		}
 
 		//Parse and apply with elements using the Laravel "with" function 
-		if(isset($this->params['with']) && $this->isEloquentBuilder)
+		if(($with = $this->getParam('with')) && $this->isEloquentBuilder)
 		{
-			$this->parseWith($this->params['with']);
+			$this->parseWith($with);
 		}		
 
 		//Parse and apply the meta data
-		if(isset($this->params['meta']))
+		if($config = $this->getParam('config'))
 		{
-			$this->parseMeta($this->params['meta']);
+			$this->parseConfig($config);
 		}
 
 		if($this->isEloquentBuilder)
@@ -203,6 +220,55 @@ class Parser
 			//Attach the query builder object back to the eloquent builder object
 			$this->builder->setQuery($this->query);
 		}
+	}
+
+	/**
+	 * Set the config object
+	 * 
+	 * @param 	mixed 	$config
+	 */
+	public function setConfigHandler($config)
+	{
+		$this->config = $config;
+	}
+
+	/**
+	 * Get a parameter 
+	 * 
+	 * @param  string 			$param
+	 * @return string|boolean
+	 */
+	protected function getParam($param)
+	{
+		if(isset($this->params[$this->prefix.$param]))
+		{
+			return $this->params[$this->prefix.$param];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the relevant filter parameters
+	 * 
+	 * @return array|boolean
+	 */
+	protected function getFilterParams()
+	{
+		$reserved = array_fill_keys($this->functions, true);
+		$prefix = $this->prefix;
+
+		$filterParams = array_diff_ukey($this->params, $reserved, function($a, $b) use ($prefix)
+		{
+			return ($a != $prefix.$b);
+		});
+
+		if(count($filterParams) > 0)
+		{
+			return $filterParams;
+		}
+
+		return false;
 	}
 
 	/**
@@ -396,14 +462,12 @@ class Parser
 	/**
 	 * Parse the remaining filter params
 	 * 
-	 * @param  array 		$filterParams 
+	 * @param  array 	$filterParams 
 	 * 
 	 * @return void
 	 */
 	protected function parseFilter($filterParams) 
 	{
-		$supportedPrefixesStr = array();
-
 		$supportedPostfixes = array(
 			'st' => '<', 
 			'gt' => '>', 
@@ -446,7 +510,8 @@ class Parser
 		        {
 		            foreach($values as $value)
 		            {
-		            	
+		            	if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+
 		            	//Link the filters with AND of there is a "not" and with OR if there's none
 		            	if($comparator == '!=' || $comparator == 'NOT LIKE')
 		            	{
@@ -462,6 +527,9 @@ class Parser
 			else 
 			{
 				$value = $values[0];
+
+				if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+
 				$this->query->where($column, $comparator, $value);
 			}
 		}
@@ -497,21 +565,35 @@ class Parser
 	 * @param  array 	$metaParam 
 	 * @return void
 	 */
-	protected function parseMeta($metaParam)
+	protected function parseConfig($configParam)
 	{
-		$metaitems = explode(',',$metaParam);
+		$configItems = explode(',',$configParam);
 
-		foreach($metaitems as $metaitem)
+		foreach($configItems as $configItem)
 		{
-			$metaitem = trim($metaitem);
+			$configItem = trim($configItem);
 
-			if($metaitem == 'total-count')
+			$pos = strpos($configItem, '-');
+			$cat = substr($configItem, 0, $pos);
+			$option = substr($configItem, $pos+1);
+			
+			if($cat == 'mode')
 			{
-				$this->meta[] = new CountMetaProvider($metaitem, $this->originalBuilder);
+				if($option == 'count')
+				{
+					$this->mode = 'count';
+				}
 			}
-			else if($metaitem == 'filter-count')
-			{	
-				$this->meta[] = new CountMetaProvider($metaitem, $this->builder);
+			else if($cat == 'meta')
+			{
+				if($option == 'total-count')
+				{
+					$this->meta[] = new CountMetaProvider($option, $this->originalBuilder);
+				}
+				else if($option == 'filter-count')
+				{
+					$this->meta[] = new CountMetaProvider($option, $this->builder);
+				}
 			}
 		}
 	}

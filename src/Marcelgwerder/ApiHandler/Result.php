@@ -12,7 +12,13 @@ class Result
 	 */
 	protected $parser;
 
-	public function __construct($parser)
+	/**
+	 * Create a new result
+	 *
+	 * @param  Marcelgwerder\ApiHandler\Parser $input
+	 * @return void
+	 */
+	public function __construct(Parser $parser)
 	{
 		$this->parser = $parser;
 	}
@@ -24,10 +30,17 @@ class Result
 	 */
 	public function getResponse()
 	{
-		$result = $this->getResult();
 		$headers = $this->getHeaders();
 
-		return Response::json($result, 200, $headers);
+		if($this->parser->mode == 'count')
+		{
+			return Response::json($headers, 200, $headers);
+		}
+		else {
+			return Response::json($this->getResult(), 200, $headers);
+		}
+		
+		
 	}
 
 	/**
@@ -47,45 +60,11 @@ class Result
 			{
 				$result = $this->parser->builder->first();
 			}
-		}
-		catch(\BadMethodCallException $e)
+		} catch(Exception $e)
 		{
-			$matches = array();
-			$message = $e->getMessage();
-
-			preg_match('/::(.+)\(\)$/', $message, $matches);
-
-			if(isset($matches[1]))
-			{
-				$relation = $matches[1];
-
-				throw new UndefinedRelationException($relation);
-			}
-
-			throw $e;
+			$this->handleException($e);	
 		}
-		catch(QueryException $e)
-		{
-			$code = $e->getCode();
-			$message = $e->getMessage();
-			$matches = array();
-
-			if($code == '42S22')
-			{
-				preg_match('/Unknown column \'([^\']+)/i', $message, $matches);
-
-				if(isset($matches[1]))
-				{
-					$field = $matches[1];
-
-					throw new UndefinedFieldException($field);
-				}
-
-				throw $e;
-			}
-
-			throw $e;
-		}
+		
 
 		return $result;
 	}
@@ -110,11 +89,73 @@ class Result
 		$meta = $this->parser->meta;
 		$headers = array();
 
-		foreach($meta as $provider)
+		try
 		{
-			$headers[$provider->getTitle()] = $provider->get();
+			foreach($meta as $provider)
+			{
+				$headers[$provider->getTitle()] = $provider->get();
+			}
+		}
+		catch(Exception $e)
+		{
+			$this->handleException($e);
 		}
 
+
 		return $headers;
+	}
+
+	/**
+	 * Get the mode of the parser
+	 * 
+	 * @return string
+	 */
+	public function getMode()
+	{
+		return $this->parser->mode;
+	}
+
+	/**
+	 * Handle an exception
+	 * 
+	 * @param  Exception $e
+	 * @return void
+	 */
+	protected function handleException($e)
+	{
+		if($e instanceof \BadMethodCallException)
+		{
+			$matches = array();
+			$message = $e->getMessage();
+
+			preg_match('/::(.+)\(\)$/', $message, $matches);
+
+			if(isset($matches[1]))
+			{
+				$relation = $matches[1];
+
+				throw new UndefinedRelationException($relation);
+			}
+		}
+		else if($e instanceof QueryException)
+		{
+			$code = $e->getCode();
+			$message = $e->getMessage();
+			$matches = array();
+
+			if($code == '42S22')
+			{
+				preg_match('/Unknown column \'([^\']+)/i', $message, $matches);
+
+				if(isset($matches[1]))
+				{
+					$field = $matches[1];
+
+					throw new UndefinedFieldException($field);
+				}
+			}
+		}
+
+		throw $e;
 	}
 }
