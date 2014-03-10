@@ -553,6 +553,14 @@ class Parser
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
 	{
+		
+		if($qParam == '') 
+		{
+			//Add where that will never be true
+			$this->query->where($fullTextSearchColumns[0], '$!7d3|//e335700d2f()49f8|&3a95||||0edb105|||');
+			return;
+		}
+
 		$keywords = explode(' ', $qParam);
 
 		$this->query->where(function($query) use($fullTextSearchColumns, $keywords)
