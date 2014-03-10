@@ -103,13 +103,21 @@ class Parser
 
 		$this->prefix = $this->config->get('api-handler::prefix');
 
-		$isEloquentModel = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
+		$isEloquentModel =  is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
+		$isEloquentRelation = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Relations\Relation');
+
 		$this->isEloquentBuilder = $builder instanceof \Illuminate\Database\Eloquent\Builder;
 		$this->isQueryBuilder = $builder instanceof \Illuminate\Database\Query\Builder;
 
 		if($this->isEloquentBuilder) 
 		{
    			$this->query = $builder->getQuery();
+		}
+		else if($isEloquentRelation)
+		{
+			$this->builder = $builder->getQuery();
+			$this->query = $builder->getBaseQuery();
+			$this->isEloquentBuilder = true;
 		}
 		else if($isEloquentModel)
 		{
