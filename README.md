@@ -14,7 +14,7 @@ There are two kind of api resources supported.
 If you handle a GET request on a resource representing a single object like for example `/api/books/1`, use the `parseSingle` method.
 
 **parseSingle($queryBuilder, $identification, [$queryParams]):**
-* **$queryBuilder**: Any object that inherits from the Laravel Query Builder or an Eloquent model.
+* **$queryBuilder**: Query builder object, Eloquent model or Eloquent relation
 * **$identification**: An integer used in the `id` column or an array with a column/value pair (`array('isbn', '1234')`) used as a unique identifier of the object.
 * **$queryParams**: An array containing the query parameters. If not defined, the original GET parameters are used.
 
@@ -27,7 +27,7 @@ ApiHandler::parseSingle($book, 1);
 If you handle a GET request on a resource representing multiple objects like for example `/api/books`, use the `parseMultiple` method.
 
 **parseMultiple($queryBuilder, $fullTextSearchColumns, [$queryParams]):**
-* **$queryBuilder**: Any object that inherits from the Laravel Query Builder or an Eloquent model.
+* **$queryBuilder**: Query builder object, Eloquent model or Eloquent relation
 * **$fullTextSearchColumns**: An array which defines the columns used for full text search.
 * **$queryParams**: An array containing the query parameters. If not defined, the original GET parameters are used.
 
@@ -52,7 +52,7 @@ Returns a Laravel `Response` object including body, headers and HTTP status code
 Returns an array of prepared headers.
 
 ####Filtering####
-Every query parameter except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q` is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
+Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
 
 ```
 /api/books?title=The Lord of the Rings
@@ -66,7 +66,7 @@ The above example would result in the following SQL where:
 WHERE `title` LIKE "The Lord%" AND `created_at` >= "2014-03-14 12:55:02"
 ```
 Its also possible to use multiple values for one filter. Multiple values are seperated by a pipe `|`.
-Multiple values are combined with `OR` except when there is a `-not` prefix, then they are combined with `AND`.
+Multiple values are combined with `OR` except when there is a `-not` suffix, then they are combined with `AND`.
 For example all the books with the id 5 or 6:
 ```
 /api/books?id=5|6
@@ -125,9 +125,11 @@ Relationships, can also be nested:
 ***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models. This unfortunately right now only works with primary keys named `id`.
 
 ####Include Meta Information####
+It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
 
-###Response Handling###
+The `total-count` which represents the count of all elements of a resource or to be more specific, the count on the originally passed query builder instance. 
+The `filter-count` which additionally takes filters into account. They can for example be useful to implement pagination.
 
-####Error Response####
-
-####Success Response####
+```
+/api/books?id-gt=5&_config=meta-total-count,meta-filter-count
+```
