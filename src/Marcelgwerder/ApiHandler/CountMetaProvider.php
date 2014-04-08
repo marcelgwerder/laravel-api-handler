@@ -11,6 +11,9 @@ class CountMetaProvider extends MetaProvider
 
 	public function __construct($title, $builder)
 	{
+		//Remove offset from builder because a count doesn't work in combination with an offset
+		$builder->offset(0);
+		
 		$this->builder = $builder;
 		$this->title = $title;
 	}
