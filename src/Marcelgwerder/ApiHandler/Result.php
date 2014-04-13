@@ -106,6 +106,16 @@ class Result
 	}
 
 	/**
+	 * Get an array of meta providers
+	 * 
+	 * @return array
+	 */
+	public function getMetaProviders() 
+	{
+		return $this->parser->meta;
+	}
+
+	/**
 	 * Get the mode of the parser
 	 * 
 	 * @return string

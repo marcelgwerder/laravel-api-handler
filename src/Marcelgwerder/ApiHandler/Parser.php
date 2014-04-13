@@ -2,6 +2,11 @@
 
 use \Illuminate\Database\Eloquent\Relations\HasMany;
 use \Illuminate\Database\Eloquent\Relations\BelongsTo;
+use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use \Illuminate\Database\Query\Builder as QueryBuilder;
+use \ArrayObject;
+use \InvalidArgumentException;
 
 class Parser
 {
@@ -96,7 +101,6 @@ class Parser
 	 */
 	public function __construct($builder, $params, $config)
 	{
-
 		$this->builder = $builder;
 		$this->params = $params;
 		$this->config = $config;
@@ -106,8 +110,8 @@ class Parser
 		$isEloquentModel =  is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
 		$isEloquentRelation = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Relations\Relation');
 
-		$this->isEloquentBuilder = $builder instanceof \Illuminate\Database\Eloquent\Builder;
-		$this->isQueryBuilder = $builder instanceof \Illuminate\Database\Query\Builder;
+		$this->isEloquentBuilder = $builder instanceof EloquentBuilder;
+		$this->isQueryBuilder = $builder instanceof QueryBuilder;
 
 		if($this->isEloquentBuilder) 
 		{
@@ -134,7 +138,7 @@ class Parser
 		}
 		else
 		{
-			throw new \InvalidArgumentException('The builder argument has to be of type Illuminate\Database\Eloquent\Builder or Illuminate\Database\Query\Builder');
+			throw new InvalidArgumentException('The builder argument has to be of type Illuminate\Database\Eloquent\Builder or Illuminate\Database\Query\Builder');
 		}
 
 		$this->originalBuilder = clone $this->builder;
@@ -217,7 +221,7 @@ class Parser
 			$this->parseWith($with);
 		}		
 
-		//Parse and apply the meta data
+		//Parse the config params
 		if($config = $this->getParam('config'))
 		{
 			$this->parseConfig($config);
@@ -312,7 +316,6 @@ class Parser
 	 * Parse the with parameter
 	 * 
 	 * @param  string 	$withParam 
-	 * 
 	 * @return void
 	 */
 	protected function parseWith($withParam)
@@ -326,7 +329,7 @@ class Parser
 		foreach(explode(',', $withParam) as $with)
 		{
 			//Use ArrayObject to be able to copy the array (for array_splice)
-			$parts = new \ArrayObject(explode('.', $with));
+			$parts = new ArrayObject(explode('.', $with));
 			$lastKey = count($parts)-1;
 
 			for($i = 0; $i <= $lastKey; $i++)
@@ -358,14 +361,20 @@ class Parser
 				}
 				
 				$relation = call_user_func(array($previousModel, $part));
-
-
 				$model = $relation->getModel();
-				
-				$primaryKey = 'id';
-				$foreignKey = $relation->getForeignKey();
-
 				$relationType = $this->getRelationType($relation);
+
+				//Preserve backwards compatibility
+				if(method_exists($relation , 'getQualifiedOtherKeyName') && method_exists($relation , 'getQualifiedForeignKey')) 
+				{
+					$primaryKey = $relation->getOtherKey();
+					$foreignKey = $relation->getQualifiedForeignKey();
+				} 
+				else 
+				{
+					$primaryKey = $model->getKeyName();
+					$foreignKey = $relation->getForeignKey();
+				}
 
 				//Switch keys according to the type of relationship
 				if($relationType == 'HasMany')
@@ -377,27 +386,31 @@ class Parser
 				{
 					$firstKey = $foreignKey;
 					$secondKey = $primaryKey;
-				}
-				
-				//Check if we're on level 1 (e.g. a and not a.b)
-				if($previousHistoryPath == '')
+				} 
+		
+				//Skip automatic adding of keys because it's not needed for many to many relations
+				if($relationType != 'BelongsToMany')
 				{
-					if($fieldsCount > 0 && !in_array($primaryKey, $fields))
+					//Check if we're on level 1 (e.g. a and not a.b)
+					if($previousHistoryPath == '')
 					{
-						$fields[] = $firstKey;
+						if($fieldsCount > 0 && !in_array($primaryKey, $fields))
+						{
+							$fields[] = $firstKey;
+						}
 					}
-				}
-				else 
-				{
-					if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
+					else 
 					{
-						$withHistory[$previousHistoryPath]['fields'][] = $firstKey;
+						if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
+						{
+							$withHistory[$previousHistoryPath]['fields'][] = $firstKey;
+						}
 					}
-				}
 
-				if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
-				{
-					$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
+					if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
+					{
+						$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
+					}
 				}
 
 				$previousModel = $model;
@@ -419,7 +432,7 @@ class Parser
 					$pos = strpos($val, '.');
 					return $pos !== false ? substr($val, $pos+1) : $val;
 				}, $withHistory[$withHistoryKey]['fields']);
-				
+
 				if(count($fields) > 0 && is_array($fields))
 				{
 					$query->select($fields);
@@ -427,7 +440,6 @@ class Parser
 
 			};
 		}
-
 
 		$this->builder->with($withsArr);
 
@@ -471,7 +483,6 @@ class Parser
 	 * Parse the remaining filter params
 	 * 
 	 * @param  array 	$filterParams 
-	 * 
 	 * @return void
 	 */
 	protected function parseFilter($filterParams) 
@@ -548,7 +559,6 @@ class Parser
 	 * 
 	 * @param  string 	$qParam 
 	 * @param  array 	$fullTextSearchColumns
-	 * 
 	 * @return void
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
@@ -618,7 +628,6 @@ class Parser
 	 * Determine the type of the Eloquent relation
 	 * 
 	 * @param  Illuminate\Database\Eloquent\Relations\Relation $relation
-	 * 
 	 * @return string        
 	 */
 	protected function getRelationType($relation)
@@ -631,6 +640,11 @@ class Parser
 		if($relation instanceof BelongsTo)
 		{
 			return 'BelongsTo';
+		}
+
+		if($relation instanceof BelongsToMany)
+		{
+			return 'BelongsToMany';
 		}
 	}
 }
