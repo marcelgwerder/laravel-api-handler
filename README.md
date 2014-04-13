@@ -1,7 +1,22 @@
 ##Laravel API Handler##
-[![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler)
+[![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler) [![Latest Stable Version](https://poser.pugx.org/marcelgwerder/laravel-api-handler/v/stable.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![Total Downloads](https://poser.pugx.org/marcelgwerder/laravel-api-handler/downloads.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![License](https://poser.pugx.org/marcelgwerder/laravel-api-handler/license.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler)
 
 This helper package provides functionality for parsing the url of a rest api request. 
+
+###Installation###
+
+Install the package through composer by adding it to your `composer.json` file:
+
+```
+"require": {
+    "marcelgwerder/laravel-api-handler": "0.1.*"
+}
+```
+Then run `composer update`. Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
+```
+'Marcelgwerder\ApiHandler\ApiHandlerServiceProvider'
+```
+That's it!
 
 ###URL Parsing###
 
@@ -60,7 +75,7 @@ Returns a Laravel `Response` object including body, headers and HTTP status code
 Returns an array of prepared headers.
 
 **getMetaProviders():**
-Returns an array of meta provider object. Each of these objects provide a specific type of meta data of its `get()` method.
+Returns an array of meta provider object. Each of these objects provide a specific type of meta data through its `get()` method.
 
 ####Filtering####
 Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
