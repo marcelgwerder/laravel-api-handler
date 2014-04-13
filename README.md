@@ -1,13 +1,21 @@
 ##Laravel API Handler##
 [![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler)
 
-**Still in initial development!**
-
-This is going to be a helper package which provides functionality for url parsing and response handling on a Laravel REST-API. 
+This helper package provides functionality for parsing the url of a rest api request. 
 
 ###URL Parsing###
 
-There are two kind of api resources supported.
+Url parsing currently supports:
+* Limit the fields
+* Filtering
+* Limited full text search
+* Sorting
+* Define limit and offset
+* Append related models
+* Append meta information (counts)
+
+
+There are two kind of api resources supported, a single object and a collection of objects.
 
 ####A Single Object####
 
@@ -50,6 +58,9 @@ Returns a Laravel `Response` object including body, headers and HTTP status code
 
 **getHeaders():**
 Returns an array of prepared headers.
+
+**getMetaProviders():**
+Returns an array of meta provider object. Each of these objects provide a specific type of meta data of its `get()` method.
 
 ####Filtering####
 Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
@@ -122,7 +133,7 @@ Relationships, can also be nested:
 /api/books?_with=author.awards
 ```
 
-***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models. This unfortunately right now only works with primary keys named `id`.
+***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
 
 ####Include Meta Information####
 It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
