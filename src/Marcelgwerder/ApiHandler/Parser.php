@@ -54,6 +54,13 @@ class Parser
 	protected $query;
 
 	/**
+	 * The original query builder instance.
+	 * 
+	 * @var \Illuminate\Database\Query\Builder
+	 */
+	protected $originalQuery;
+
+	/**
 	 * The http query params.
 	 *
 	 * @var array
@@ -142,6 +149,7 @@ class Parser
 		}
 
 		$this->originalBuilder = clone $this->builder;
+		$this->originalQuery = clone $this->query;
 	}
 
 	/**
@@ -414,7 +422,6 @@ class Parser
 				}
 
 				$previousModel = $model;
-				
 			}
 
 			unset($previousModel);
@@ -475,7 +482,6 @@ class Parser
 
 			$pair = array(preg_replace('/^-/', '', $sortElem), $direction);
 			call_user_func_array(array($this->query, 'orderBy'), $pair);
-
 		}
 	}
 
@@ -563,7 +569,6 @@ class Parser
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
 	{
-		
 		if($qParam == '') 
 		{
 			//Add where that will never be true
@@ -614,11 +619,11 @@ class Parser
 			{
 				if($option == 'total-count')
 				{
-					$this->meta[] = new CountMetaProvider($option, $this->originalBuilder);
+					$this->meta[] = new CountMetaProvider('Meta-Total-Count', $this->originalQuery);
 				}
 				else if($option == 'filter-count')
 				{
-					$this->meta[] = new CountMetaProvider($option, $this->builder);
+					$this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->query);
 				}
 			}
 		}

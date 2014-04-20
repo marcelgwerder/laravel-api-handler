@@ -15,7 +15,7 @@ class CountMetaProvider extends MetaProvider
 		$this->title = $title;
 
 		//Remove offset from builder because a count doesn't work in combination with an offset
-		$this->builder->offset(0);
+		$this->builder->offset = null;
 	}
 
 	/**

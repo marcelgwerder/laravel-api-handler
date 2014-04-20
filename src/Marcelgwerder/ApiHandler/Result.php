@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Response;
 use Illuminate\Database\QueryException;
+use \BadMethodCallException;
 
 class Result
 {
@@ -36,11 +37,10 @@ class Result
 		{
 			return Response::json($headers, 200, $headers);
 		}
-		else {
+		else 
+		{
 			return Response::json($this->getResult(), 200, $headers);
 		}
-		
-		
 	}
 
 	/**
@@ -60,12 +60,12 @@ class Result
 			{
 				$result = $this->parser->builder->first();
 			}
-		} catch(Exception $e)
+		} 
+		catch(Exception $e)
 		{
 			$this->handleException($e);	
 		}
 		
-
 		return $result;
 	}
 
@@ -101,7 +101,6 @@ class Result
 			$this->handleException($e);
 		}
 
-
 		return $headers;
 	}
 
@@ -133,7 +132,7 @@ class Result
 	 */
 	protected function handleException($e)
 	{
-		if($e instanceof \BadMethodCallException)
+		if($e instanceof BadMethodCallException)
 		{
 			$matches = array();
 			$message = $e->getMessage();

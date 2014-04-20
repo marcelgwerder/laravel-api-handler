@@ -135,8 +135,9 @@ To define the maximum amount of datasets in the result, use `_limit`.
 ```
 To define the offset of the datasets in the result, use `_offset`.
 ```
-/api/books?_offset=20
+/api/books?_offset=20&_limit=50
 ```
+Be aware that in order to use `offset` you alwas have to specify a `limit` too. MySQL throws an error for offset definition without a limit.
 
 ####Include Related Models####
 The api handler also supports Eloquent relationships. So if you want to get all the books with their authors, just add the authors to the `_with` parameter.
@@ -159,3 +160,10 @@ The `filter-count` which additionally takes filters into account. They can for e
 ```
 /api/books?id-gt=5&_config=meta-total-count,meta-filter-count
 ```
+All meta fields are provided in the response header. There is no such "envelope" thing in the response body. 
+The following custom headers are used:
+
+Config            | Header      
+----------------- | ------------- 
+meta-total-count  | Meta-Total-Count
+meta-filter-count | Meta-Filter-Count
