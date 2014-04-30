@@ -2,6 +2,7 @@
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Input;
 
 class ApiHandlerServiceProvider extends ServiceProvider {
@@ -20,7 +21,7 @@ class ApiHandlerServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$this->package('marcelgwerder/api-handler');
+		$this->package('marcelgwerder/laravel-api-handler');
 	}
 
 	/**
@@ -37,6 +38,7 @@ class ApiHandlerServiceProvider extends ServiceProvider {
 			$apiHandler->setInputHandler(new Input);
 			$apiHandler->setResponseHandler(new Response);
 			$apiHandler->setConfigHandler($app['config']);
+			$apiHandler->setRequest(Request::instance());
 
 			return $apiHandler;
 

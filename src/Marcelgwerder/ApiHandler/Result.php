@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Response;
 use Illuminate\Database\QueryException;
 use \BadMethodCallException;
+use \Exception;
 
 class Result
 {
@@ -132,21 +133,7 @@ class Result
 	 */
 	protected function handleException($e)
 	{
-		if($e instanceof BadMethodCallException)
-		{
-			$matches = array();
-			$message = $e->getMessage();
-
-			preg_match('/::(.+)\(\)$/', $message, $matches);
-
-			if(isset($matches[1]))
-			{
-				$relation = $matches[1];
-
-				throw new UndefinedRelationException($relation);
-			}
-		}
-		else if($e instanceof QueryException)
+		if($e instanceof QueryException)
 		{
 			$code = $e->getCode();
 			$message = $e->getMessage();
@@ -160,7 +147,7 @@ class Result
 				{
 					$field = $matches[1];
 
-					throw new UndefinedFieldException($field);
+					throw new ApiHandlerException('UnknownResourceField', null, array('field' => $field));
 				}
 			}
 		}

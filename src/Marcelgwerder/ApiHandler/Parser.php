@@ -7,6 +7,7 @@ use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \ArrayObject;
 use \InvalidArgumentException;
+use \BadMethodCallException;
 
 class Parser
 {
@@ -112,7 +113,7 @@ class Parser
 		$this->params = $params;
 		$this->config = $config;
 
-		$this->prefix = $this->config->get('api-handler::prefix');
+		$this->prefix = $this->config->get('laravel-api-handler::prefix');
 
 		$isEloquentModel =  is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
 		$isEloquentRelation = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Relations\Relation');
@@ -145,7 +146,7 @@ class Parser
 		}
 		else
 		{
-			throw new InvalidArgumentException('The builder argument has to be of type Illuminate\Database\Eloquent\Builder or Illuminate\Database\Query\Builder');
+			throw new InvalidArgumentException('The builder argument has to the wrong type.');
 		}
 
 		$this->originalBuilder = clone $this->builder;
@@ -368,7 +369,22 @@ class Parser
 					$previousModel = $baseModel;
 				}
 				
-				$relation = call_user_func(array($previousModel, $part));
+				//Throw a new ApiHandlerException if the relation doesn't exist
+				try{
+					$relation = call_user_func(array($previousModel, $part));
+				} catch (BadMethodCallException $e) {
+					$matches = array();
+					$message = $e->getMessage();
+
+					preg_match('/::(.+)\(\)$/', $message, $matches);
+
+					if(isset($matches[1]))
+					{
+						$relation = $matches[1];
+						throw new ApiHandlerException('UnknownResourceRelation', null, array('relation' => $relation));
+					}
+				}
+
 				$model = $relation->getModel();
 				$relationType = $this->getRelationType($relation);
 
@@ -449,7 +465,7 @@ class Parser
 		}
 
 		$this->builder->with($withsArr);
-
+	
 		//Renew base fields
 		if(count($fields) > 0)
 		{

@@ -2,40 +2,45 @@
 
 class ApiHandlerException extends \Exception
 {
-	protected $type;
-	protected $display;
 	protected $httpCode;
 
-    public function __construct($code, $display = '', $replacements = array()) 
+    public function __construct($code, $replace = array(), $message = null) 
     {
-    	$config = Config::getError('code', $code);
+        $config = app()->make('config');
 
-    	$this->type = $config['type'];
-    	$this->httpCode = $config['http_code'];  
-    	$this->display = $display;
+        $errors = $config->get('laravel-api-handler::errors');
+        $internalErrors = $config->get('laravel-api-handler::internal_errors');
 
-        $message = $config['message'];
-
-        //Replace placeholders in $display and $message
-        foreach ($replacements as $replacementKey => $replacement) 
+        //Check if error is internal or not
+        if(isset($internalErrors[$code]))
         {
-        	$message = str_replace(':'.$replacementKey, $replacement, $message);
-        	$display = str_replace(':'.$replacementKey, $replacement, $display);
+            $code = $internalErrors[$code];
         }
 
-        parent::__construct($message, $code);
+        $error = $errors[$code];
+
+        if($message == null) 
+        {
+            $message = $error['message'];
+        }
+
+    	$this->httpCode = $error['http_code'];  
+        $this->code = $code;
+
+        //Replace replacement values
+        foreach($replace as $key => $value)
+        {
+            $message = str_replace(':'.$key, $value, $message);
+        }
+
+        parent::__construct($message);
     }
 
-    public function getType()
-    {
-    	return $this->type;
-    }
-
-    public function getDisplay()
-    {
-    	return $this->display;
-    }
-
+    /**
+     * Get the http code of the exception
+     * 
+     * @return int|string
+     */
     public function getHttpCode()
     {
     	return $this->httpCode;

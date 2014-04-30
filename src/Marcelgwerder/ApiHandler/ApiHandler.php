@@ -27,10 +27,10 @@ class ApiHandler
 	/**
 	 * Return a new Result object for multiple datasets
 	 * 
-	 * @param  mixed  							$queryBuilder          Some kind of query builder instance 
-	 * @param  array   							$fullTextSearchColumns Columns to search in fulltext search
-	 * @param  array|boolean 					$queryParams           A list of query parameter
-	 * @return Marcelgwerder\ApiHandler\Result                         
+	 * @param  mixed  			$queryBuilder          Some kind of query builder instance 
+	 * @param  array   			$fullTextSearchColumns Columns to search in fulltext search
+	 * @param  array|boolean 	$queryParams           A list of query parameter
+	 * @return Result                         
 	 */
 	public function parseMultiple($queryBuilder, $fullTextSearchColumns = array(), $queryParams = false)
 	{
@@ -43,67 +43,88 @@ class ApiHandler
 	}
 
 	/**
-	 * Return an error response or throw an exception if debug mode is on
-	 * and error is unknown
+	 * Return a new "created" response object
 	 * 
-	 * @param  Exception|integer 	$error   Exception object or an error code
-	 * @param  string 				$display A message which can be shown to an enduser
-	 * @param  array  				$headers HTTP headers
-	 * @return Illuminate\Http\JsonResponse         		
+	 * @param  array|object   $object
+	 * @return Response    
 	 */
-	/*public function failed($error, $display = '', $headers = array())
+	public function created($object) 
 	{
-		if(is_numeric($error))
-		{
-			$error = new ApiHandlerException($error, $display);
-		}
-		else if(!($error instanceof ApiHandlerException) && is_subclass_of($error, 'Exception'))
-		{
-			$debug = $this->config->get('app.debug');
+		return $this->response->json($object, 201);
+	}
 
-			if($debug == true)
-			{
-				throw $error;
-			} 
-			else
-			{
-				$errorConfig = $this->config->getPredefinedError('Unknown');
-				$error = new ApiHandlerException($errorConfig['code'], $display);
-			} 
-		}
-
-		if($error instanceof ApiHandlerException)
+	/**
+	 * Return a new "updated" response object
+	 * 
+	 * @param  array|object 	$object 
+	 * @return Response    
+	 */
+	public function updated($object = null) 
+	{
+		if($object != null)  
 		{
-			$response = Response::json(
-				array(
-					'code' 		=> $error->getCode(),
-					'message' 	=> $error->getMessage(),
-					'display' 	=> $error->getDisplay(),
-				),
-				$error->getHttpCode(),
-				$headers
-			);
+			return $this->response->json($object, 200);
 		}
 		else 
 		{
-			$response = false;
+			return $this->response->make(null, 204);
 		}
-		
-		return $response;
-	}*/
+	}
 
+	/**
+	 * Return a new "deleted" response object
+	 * 
+	 * @param  array|object 	$object
+	 * @return Response
+	 */
+	public function deleted($object = null) {
+		if($object != null)  
+		{
+			return $this->response->json($object, 200);
+		}
+		else 
+		{
+			return $this->response->make(null, 204);
+		}
+	}
+
+	/**
+	 * Set the input handler
+	 * 
+	 * @param Input $input
+	 */
 	public function setInputHandler($input)
 	{
 		$this->input = $input;
 	}
 
+	/**
+	 * Set the config handler
+	 * 
+	 * @param Config $config
+	 */
 	public function setConfigHandler($config)
 	{
 		$this->config = $config;
 	}
 
+	/**
+	 * Set the response handler
+	 * 
+	 * @param Response $response
+	 */
 	public function setResponseHandler($response)
 	{
 		$this->response = $response;
+	}
+
+	/**
+	 * Set the current request
+	 * 
+	 * @param Request $request 
+	 */
+	public function setRequest($request) 
+	{
+		$this->request = $request;
 	}
 }
