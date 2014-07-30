@@ -48,6 +48,13 @@ class Parser
 	public $mode = 'default';
 
 	/**
+	 * If the response should be in an envelope or not
+	 * 
+	 * @var boolean
+	 */
+	public $envelope;
+
+	/**
 	 * The base query builder instance.
 	 *
 	 * @var \Illuminate\Database\Query\Builder
@@ -114,6 +121,7 @@ class Parser
 		$this->config = $config;
 
 		$this->prefix = $this->config->get('laravel-api-handler::prefix');
+		$this->envelope = $this->config->get('laravel-api-handler::envelope');
 
 		$isEloquentModel =  is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
 		$isEloquentRelation = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Relations\Relation');
@@ -640,6 +648,17 @@ class Parser
 				else if($option == 'filter-count')
 				{
 					$this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->query);
+				}
+			}
+			else if($cat == 'response')
+			{
+				if($option == 'envelope') 
+				{
+					$this->envelope = true;
+				}
+				else if($option == 'default') 
+				{
+					$this->envelope = false;
 				}
 			}
 		}

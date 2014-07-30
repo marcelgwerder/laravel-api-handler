@@ -16,6 +16,18 @@ return array(
 
 	/*
 	|--------------------------------------------------------------------------
+	| Envelope
+	|--------------------------------------------------------------------------
+	|
+	| Define whether to use an envelope for meta data or not. By default the 
+	| meta data will be in the response header not in the body.
+	|
+	*/
+
+	'envelope' => false,
+
+	/*
+	|--------------------------------------------------------------------------
 	| Errors
 	|--------------------------------------------------------------------------
 	|
@@ -31,11 +43,9 @@ return array(
 		'Forbidden'						=> array('http_code' => 403, 'message' => 'You don\'t have enough permissions to access this resource'),
 		'ToManyRequests'				=> array('http_code' => 429, 'message' => 'You have sent too many requests in a specific timespan'),
 		'InvalidInput' 					=> array('http_code' => 400, 'message' => 'The submited data is not valid'),
-		'InvalidQueryParameterValue' 	=> array('http_code' => 400, 'message' => 'Invalid parameter'),
+		'InvalidQueryParameter' 		=> array('http_code' => 400, 'message' => 'Invalid parameter'),
 		'UnknownResourceField' 			=> array('http_code' => 400, 'message' => 'Unknown field ":field"'),
-		'UnknownResourceRelation' 		=> array('http_code' => 400, 'message' => 'Unknown relation ":relation"'),
-		//Custom
-		'IllegalInput' 					=> array('http_code' => 400, 'message' => 'You don\'t have permissions to use the data you\'ve provided')
+		'UnknownResourceRelation' 		=> array('http_code' => 400, 'message' => 'Unknown relation ":relation"')
  	),
 
 	/*
@@ -52,7 +62,7 @@ return array(
 		'UnknownResourceField' 	 => 'UnknownResourceField',
 		'UnknownResourceRelation'  => 'UnknownResourceRelation',
 		'UnsupportedQueryParameter'  => 'UnsupportedQueryParameter',
-		'InvalidQueryParameterValue' => 'InvalidQueryParameterValue'
+		'InvalidQueryParameter' => 'InvalidQueryParameter'
 	)
 
 );

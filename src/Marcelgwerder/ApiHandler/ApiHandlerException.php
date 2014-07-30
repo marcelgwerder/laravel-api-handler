@@ -32,8 +32,6 @@ class ApiHandlerException extends \Exception
         {
             $message = str_replace(':'.$key, $value, $message);
         }
-
-        parent::__construct($message);
     }
 
     /**

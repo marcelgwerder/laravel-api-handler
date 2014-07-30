@@ -40,7 +40,18 @@ class Result
 		}
 		else 
 		{
-			return Response::json($this->getResult(), 200, $headers);
+			if($this->parser->envelope) 
+			{
+				return Response::json(array(
+					'meta' => $headers,
+					'data' => $this->getResult()
+				), 200);
+			} 
+			else 
+			{
+				return Response::json($this->getResult(), 200, $headers);
+			}
+			
 		}
 	}
 
@@ -94,7 +105,14 @@ class Result
 		{
 			foreach($meta as $provider)
 			{
-				$headers[$provider->getTitle()] = $provider->get();
+				if($this->parser->envelope) 
+				{
+					$headers[strtolower(str_replace('-', '_', preg_replace('/^Meta-/', '', $provider->getTitle())))] = $provider->get();
+				} 
+				else 
+				{
+					$headers[$provider->getTitle()] = $provider->get();
+				}		
 			}
 		}
 		catch(Exception $e)

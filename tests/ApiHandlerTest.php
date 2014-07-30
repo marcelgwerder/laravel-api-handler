@@ -42,7 +42,9 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //Mock the config
         $config = m::mock('ConfigMock');
         $config->shouldReceive('get')->once()
-               ->with('api-handler::prefix')->andReturn('_');
+               ->with('laravel-api-handler::prefix')->andReturn('_');
+        $config->shouldReceive('get')->once()
+               ->with('laravel-api-handler::envelope')->andReturn(false);
 
         //Mock the input
         $input = m::mock('InputMock');
@@ -59,6 +61,11 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
         $connection = m::mock('Illuminate\Database\ConnectionInterface', array('getQueryGrammar' => $grammar, 'getPostProcessor' => $processor));
+        $connection->shouldReceive('select')->once()->with('select * from `posts`', array())->andReturn(array(
+            array('foo' => 'A1', 'bar' => 'B1'),
+            array('foo' => 'A2', 'bar' => 'B2' )
+        ));
+
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', array('connection' => $connection));
 
         Post::setConnectionResolver($resolver);
@@ -67,7 +74,6 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->apiHandler->setConfigHandler($config);
         $this->apiHandler->setInputHandler($input);
         $this->apiHandler->setResponseHandler($response);
-
     }
     
     public function testParseSingle()
@@ -201,6 +207,18 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertContains('id', $columns);
         $this->assertContains('first_name', $columns);
 
+    }
+
+    public function testGetResponse() 
+    {
+        $post = new Post();
+
+        $response = $this->apiHandler->parseMultiple($post, array('title','description'), array('_config' => 'response-envelope'))->getResponse();
+        $data = $response->getData();
+        
+        $this->assertInstanceOf('Illuminate\Http\JsonResponse', $response);
+        $this->assertObjectHasAttribute('meta', $data);
+        $this->assertObjectHasAttribute('data', $data);
     }
 
 }
