@@ -1,7 +1,7 @@
 ##Laravel API Handler##
 [![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler) [![Latest Stable Version](https://poser.pugx.org/marcelgwerder/laravel-api-handler/v/stable.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![Total Downloads](https://poser.pugx.org/marcelgwerder/laravel-api-handler/downloads.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![License](https://poser.pugx.org/marcelgwerder/laravel-api-handler/license.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler)
 
-This helper package provides functionality for parsing the url of a rest api request. 
+This helper package provides functionality for parsing the url of a rest api request.
 
 ###Installation###
 
@@ -121,7 +121,7 @@ Two ways of sorting, ascending and descending. Every column which should be sort
 ```
 
 ####Full Text Search####
-The api handler url parsing function also supports a limited full text search. A given text is split into keywords which then are searched in the database. Whenever one of the keyword exists, the corresponding row is included in the result set. 
+The api handler url parsing function also supports a limited full text search. A given text is split into keywords which then are searched in the database. Whenever one of the keyword exists, the corresponding row is included in the result set.
 
 ```
 /api/books?_q=The Lord of the Rings
@@ -154,16 +154,33 @@ Relationships, can also be nested:
 ####Include Meta Information####
 It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
 
-The `total-count` which represents the count of all elements of a resource or to be more specific, the count on the originally passed query builder instance. 
+The `total-count` which represents the count of all elements of a resource or to be more specific, the count on the originally passed query builder instance.
 The `filter-count` which additionally takes filters into account. They can for example be useful to implement pagination.
 
 ```
 /api/books?id-gt=5&_config=meta-total-count,meta-filter-count
 ```
-All meta fields are provided in the response header. There is no such "envelope" thing in the response body. 
+All meta fields are provided in the response header. There is no such "envelope" thing in the response body.
 The following custom headers are used:
 
-Config            | Header      
------------------ | ------------- 
+Config            | Header
+----------------- | -------------
 meta-total-count  | Meta-Total-Count
 meta-filter-count | Meta-Filter-Count
+
+####Use an envelope for the response
+By default meta data is included in the response header. If you want to have everything togheter in the response body you can request a so called "envelope"
+either by including `response-envelope` in the `_config` parameter or by overriding the default `config.php` of the package.
+
+The envelope has the following structure:
+
+```json
+{
+  "meta": {
+    ...
+  },
+  "data": [
+    ...
+  ]
+}
+```
