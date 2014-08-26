@@ -1,7 +1,5 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Support\Facades\Response;
-use Illuminate\Database\QueryException;
 use \BadMethodCallException;
 use \Exception;
 
@@ -15,14 +13,23 @@ class Result
 	protected $parser;
 
 	/**
+	 * Response instance
+	 * 
+	 * @var mixed
+	 */
+	protected $response;
+
+	/**
 	 * Create a new result
 	 *
-	 * @param  Marcelgwerder\ApiHandler\Parser $input
+	 * @param  Marcelgwerder\ApiHandler\Parser 	$parse
+	 * @param  Response						  	$response
 	 * @return void
 	 */
-	public function __construct(Parser $parser)
+	public function __construct(Parser $parser, $response)
 	{
 		$this->parser = $parser;
+		$this->response = $response;
 	}
 
 	/**
@@ -36,20 +43,20 @@ class Result
 
 		if($this->parser->mode == 'count')
 		{
-			return Response::json($headers, 200, $headers);
+			return $this->response->json($headers, 200, $headers);
 		}
 		else 
 		{
 			if($this->parser->envelope) 
 			{
-				return Response::json(array(
+				return $this->response->json(array(
 					'meta' => $headers,
 					'data' => $this->getResult()
 				), 200);
 			} 
 			else 
 			{
-				return Response::json($this->getResult(), 200, $headers);
+				return $this->response->json($this->getResult(), 200, $headers);
 			}
 			
 		}
@@ -62,21 +69,14 @@ class Result
 	 */
 	public function getResult()
 	{
-		try
+		if($this->parser->multiple)
 		{
-			if($this->parser->multiple)
-			{
-				$result = $this->parser->builder->get();
-			}
-			else
-			{
-				$result = $this->parser->builder->first();
-			}
-		} 
-		catch(Exception $e)
-		{
-			$this->handleException($e);	
+			$result = $this->parser->builder->get();
 		}
+		else
+		{
+			$result = $this->parser->builder->first();
+		} 
 		
 		return $result;
 	}
@@ -101,23 +101,16 @@ class Result
 		$meta = $this->parser->meta;
 		$headers = array();
 
-		try
+		foreach($meta as $provider)
 		{
-			foreach($meta as $provider)
+			if($this->parser->envelope) 
 			{
-				if($this->parser->envelope) 
-				{
-					$headers[strtolower(str_replace('-', '_', preg_replace('/^Meta-/', '', $provider->getTitle())))] = $provider->get();
-				} 
-				else 
-				{
-					$headers[$provider->getTitle()] = $provider->get();
-				}		
-			}
-		}
-		catch(Exception $e)
-		{
-			$this->handleException($e);
+				$headers[strtolower(str_replace('-', '_', preg_replace('/^Meta-/', '', $provider->getTitle())))] = $provider->get();
+			} 
+			else 
+			{
+				$headers[$provider->getTitle()] = $provider->get();
+			}		
 		}
 
 		return $headers;
@@ -141,35 +134,5 @@ class Result
 	public function getMode()
 	{
 		return $this->parser->mode;
-	}
-
-	/**
-	 * Handle an exception
-	 * 
-	 * @param  Exception $e
-	 * @return void
-	 */
-	protected function handleException($e)
-	{
-		if($e instanceof QueryException)
-		{
-			$code = $e->getCode();
-			$message = $e->getMessage();
-			$matches = array();
-
-			if($code == '42S22')
-			{
-				preg_match('/Unknown column \'([^\']+)/i', $message, $matches);
-
-				if(isset($matches[1]))
-				{
-					$field = $matches[1];
-
-					throw new ApiHandlerException('UnknownResourceField', null, array('field' => $field));
-				}
-			}
-		}
-
-		throw $e;
 	}
 }

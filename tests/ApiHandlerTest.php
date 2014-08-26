@@ -2,6 +2,8 @@
 use \Marcelgwerder\ApiHandler\ApiHandler;
 use \Illuminate\Database\Connection;
 use \Illuminate\Database\ConnectionResolver;
+use \Illuminate\Database\Eloquent\Collection;
+use \Illuminate\Http\JsonResponse;
 use Mockery as m;
 
 class ApiHandlerTest extends PHPUnit_Framework_TestCase 
@@ -34,6 +36,12 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             '_config'       => 'mode-default,meta-filter-count,meta-total-count'
         );
 
+        //Test data 
+        $this->data = array(
+            array('foo' => 'A1', 'bar' => 'B1'),
+            array('foo' => 'A2', 'bar' => 'B2' )
+        );
+
         //Mock the application
         $app = m::mock('AppMock');
         $app->shouldReceive('instance')->once()->andReturn($app);
@@ -45,6 +53,8 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
                ->with('laravel-api-handler::prefix')->andReturn('_');
         $config->shouldReceive('get')->once()
                ->with('laravel-api-handler::envelope')->andReturn(false);
+        $config->shouldReceive('package')->once()
+               ->with('marcelgwerder/laravel-api-handler', 'laravel-api-handler')->andReturn(true);
 
         //Mock the input
         $input = m::mock('InputMock');
@@ -53,18 +63,14 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
         //Mock the response
         $response = m::mock('ResponseMock');
-        $response->shouldReceive('json')->once()
-                 ->with()->andReturn($this->params); 
+        $response->shouldReceive('json')->once()->andReturn(new JsonResponse(['meta' => [], 'data' => new Collection()]));
 
         //Mock the connection the same way as laravel does:
         //tests/Database/DatabaseEloquentBuilderTest.php#L408-L418 (mockConnectionForModel($model, $database))
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
         $connection = m::mock('Illuminate\Database\ConnectionInterface', array('getQueryGrammar' => $grammar, 'getPostProcessor' => $processor));
-        $connection->shouldReceive('select')->once()->with('select * from `posts`', array())->andReturn(array(
-            array('foo' => 'A1', 'bar' => 'B1'),
-            array('foo' => 'A2', 'bar' => 'B2' )
-        ));
+        $connection->shouldReceive('select')->once()->with('select * from `posts`', array())->andReturn($this->data);
 
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', array('connection' => $connection));
 

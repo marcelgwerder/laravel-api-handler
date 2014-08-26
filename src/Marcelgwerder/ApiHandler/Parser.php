@@ -120,6 +120,9 @@ class Parser
 		$this->params = $params;
 		$this->config = $config;
 
+		//Set the package
+		$this->config->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
+
 		$this->prefix = $this->config->get('laravel-api-handler::prefix');
 		$this->envelope = $this->config->get('laravel-api-handler::envelope');
 
@@ -131,7 +134,7 @@ class Parser
 
 		if($this->isEloquentBuilder) 
 		{
-   			$this->query = $builder->getQuery();
+			$this->query = $builder->getQuery();
 		}
 		else if($isEloquentRelation)
 		{
@@ -389,7 +392,7 @@ class Parser
 					if(isset($matches[1]))
 					{
 						$relation = $matches[1];
-						throw new ApiHandlerException('UnknownResourceRelation', null, array('relation' => $relation));
+						throw new ApiHandlerException('UnknownResourceRelation', array('relation' => $relation));
 					}
 				}
 
@@ -551,27 +554,27 @@ class Parser
 
 			$column = $keyMatches[2];
 
-		 	$values = explode('|', $filterParamValue);
+			$values = explode('|', $filterParamValue);
 
-		 	if(count($values) > 1)
-		 	{
+			if(count($values) > 1)
+			{
 				$this->query->where(function($query) use($column, $comparator, $values)
-		        {
-		            foreach($values as $value)
-		            {
-		            	if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+				{
+					foreach($values as $value)
+					{
+						if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
 
-		            	//Link the filters with AND of there is a "not" and with OR if there's none
-		            	if($comparator == '!=' || $comparator == 'NOT LIKE')
-		            	{
-		            		$query->where($column, $comparator, $value);
-		            	}
-		            	else 
-		            	{
-		            		$query->orWhere($column, $comparator, $value);
-		            	}
-		            }
-		        });
+						//Link the filters with AND of there is a "not" and with OR if there's none
+						if($comparator == '!=' || $comparator == 'NOT LIKE')
+						{
+							$query->where($column, $comparator, $value);
+						}
+						else 
+						{
+							$query->orWhere($column, $comparator, $value);
+						}
+					}
+				});
 			}
 			else 
 			{
@@ -607,9 +610,9 @@ class Parser
 			foreach($fullTextSearchColumns as $column)
 			{
 				foreach($keywords as $keyword)
-		        {
-		            $query->orWhere($column, 'LIKE', '%'.$keyword.'%');
-		        }
+				{
+					$query->orWhere($column, 'LIKE', '%'.$keyword.'%');
+				}
 			}
 		});
 	}

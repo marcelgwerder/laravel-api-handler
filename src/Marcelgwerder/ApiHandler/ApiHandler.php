@@ -3,9 +3,37 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Response;
 
-
 class ApiHandler 
 {
+	/**
+	 * Config instance.
+	 *
+	 * @var Config
+	 */
+	protected $config;
+
+	
+	/**
+	 * Response instance
+	 * 
+	 * @var Response
+	 */
+	protected $response;
+
+	/**
+	 * Request instance
+	 * 
+	 * @var Request
+	 */
+	protected $request;
+
+	/**
+	 * Input instance
+	 * 
+	 * @var Input
+	 */
+	protected $input;
+
 	/**
 	 * Return a new Result object for a single dataset
 	 * 
@@ -21,7 +49,7 @@ class ApiHandler
 		$parser = new Parser($queryBuilder, $queryParams, $this->config);
 		$parser->parse($identification);
 
-		return new Result($parser);
+		return new Result($parser, $this->response);
 	}
 
 	/**
@@ -39,7 +67,7 @@ class ApiHandler
 		$parser = new Parser($queryBuilder, $queryParams, $this->config);
 		$parser->parse($fullTextSearchColumns, true);
 
-		return new Result($parser);
+		return new Result($parser, $this->response);
 	}
 
 	/**
