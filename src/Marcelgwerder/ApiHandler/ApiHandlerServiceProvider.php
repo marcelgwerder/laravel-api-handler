@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Input;
 
-class ApiHandlerServiceProvider extends ServiceProvider {
-
+class ApiHandlerServiceProvider extends ServiceProvider 
+{
 	/**
 	 * Indicates if loading of the provider is deferred.
 	 *

@@ -11,7 +11,6 @@ use \BadMethodCallException;
 
 class Parser
 {
-
 	/**
 	 * The builder Instance.
 	 *
@@ -378,12 +377,14 @@ class Parser
 				}
 
 				//Get all given fields related to the current part
-				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($field) use($part) {
+				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($field) use($part) 
+				{
 					return preg_match('/'.$part.'\..+$/', $field);
 				});
 
 				//Get all given sorts related to the current part
-				$withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function($pair) use($part) {
+				$withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function($pair) use($part) 
+				{
 					return preg_match('/'.$part.'\..+$/', $pair[0]);
 				});
 
@@ -393,9 +394,12 @@ class Parser
 				}
 				
 				//Throw a new ApiHandlerException if the relation doesn't exist
-				try{
+				try
+				{
 					$relation = call_user_func(array($previousModel, $part));
-				} catch (BadMethodCallException $e) {
+				} 
+				catch (BadMethodCallException $e) 
+				{
 					$matches = array();
 					$message = $e->getMessage();
 
@@ -474,7 +478,8 @@ class Parser
 			$withsArr[$withHistoryKey] = function($query) use ($withHistory, $withHistoryKey){
 
 				//Reduce field values to fieldname
-				$fields = array_map(function($field) {
+				$fields = array_map(function($field) 
+				{
 					$pos = strpos($field, '.');
 					return $pos !== false ? substr($field, $pos+1) : $field;
 				}, $withHistory[$withHistoryKey]['fields']);
@@ -485,7 +490,8 @@ class Parser
 				}
 
 				//Attach sorts
-				foreach($withHistory[$withHistoryKey]['sorts'] as $pair) {
+				foreach($withHistory[$withHistoryKey]['sorts'] as $pair) 
+				{
 					$pos = strpos($pair[0], '.');
 					$pair = $pos !== false ? array(substr($pair[0], $pos+1), $pair[1]) : $pair;
 
@@ -527,9 +533,12 @@ class Parser
 			$pair = array(preg_replace('/^-/', '', $sortElem), $direction);
 
 			//Only add the sorts that are on the base resource
-			if(strpos($sortElem, '.') === false) {
+			if(strpos($sortElem, '.') === false) 
+			{
 				call_user_func_array(array($this->query, 'orderBy'), $pair);
-			} else {
+			} 
+			else 
+			{
 				$this->additionalSorts[] = $pair;
 			}
 		}
