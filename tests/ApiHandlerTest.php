@@ -31,7 +31,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             //With
             '_with'         => 'comments.user',
             //Sort
-            '_sort'         => '-title,first_name',
+            '_sort'         => '-title,first_name,comments.created_at',
             //Config
             '_config'       => 'mode-default,meta-filter-count,meta-total-count'
         );
@@ -183,7 +183,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $orders = $queryBuilder->orders;
         $this->assertContains(array('column' => 'title', 'direction' => 'desc'), $orders);
         $this->assertContains(array('column' => 'first_name', 'direction' => 'asc'), $orders);
-
+        
         //
         //With
         //
@@ -213,6 +213,11 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertContains('id', $columns);
         $this->assertContains('first_name', $columns);
 
+        //Check if sorts are set on the "comments" relation query 
+        $query = $post->newQuery(); 
+        call_user_func($eagerLoads['comments'], $query);
+        $orders = $query->getQuery()->orders;
+        $this->assertContains(array('column' => 'created_at', 'direction' => 'asc'), $orders);
     }
 
     public function testGetResponse() 

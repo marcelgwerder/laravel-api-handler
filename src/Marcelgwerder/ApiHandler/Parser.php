@@ -88,11 +88,18 @@ class Parser
 	protected $functionalParams;
 
 	/**
-	 * All given fields
+	 * All fields that belong to a relation
 	 *
 	 * @var array
 	 */
 	protected $additionalFields = array();
+
+	/**
+	 * All sorts that belong to a relation
+	 *
+	 * @var array
+	 */
+	protected $additionalSorts = array();
 
 	/**
 	 * If builder is an eloquent builder or not
@@ -180,12 +187,6 @@ class Parser
 		{
 			$fullTextSearchColumns = $options;
 
-			//Parse and apply sort elements using the laravel "orderBy" function
-			if($sort = $this->getParam('sort'))
-			{
-				$this->parseSort($sort);
-			}
-
 			//Parse and apply offset using the laravel "offset" function
 			if($offset = $this->getParam('offset'))
 			{
@@ -233,6 +234,12 @@ class Parser
 		if($fields = $this->getParam('fields'))
 		{
 			$this->parseFields($fields);
+		}
+
+		//Parse and apply sort elements using the laravel "orderBy" function
+		if($sort = $this->getParam('sort'))
+		{
+			$this->parseSort($sort);
 		}
 
 		//Parse and apply with elements using the Laravel "with" function 
@@ -371,8 +378,13 @@ class Parser
 				}
 
 				//Get all given fields related to the current part
-				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($val) use($part) {
-					return preg_match('/'.$part.'\..+$/', $val);
+				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($field) use($part) {
+					return preg_match('/'.$part.'\..+$/', $field);
+				});
+
+				//Get all given sorts related to the current part
+				$withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function($pair) use($part) {
+					return preg_match('/'.$part.'\..+$/', $pair[0]);
 				});
 
 				if(!isset($previousModel))
@@ -461,10 +473,10 @@ class Parser
 		{
 			$withsArr[$withHistoryKey] = function($query) use ($withHistory, $withHistoryKey){
 
-				//Reduce values to fieldname
-				$fields = array_map(function($val) {
-					$pos = strpos($val, '.');
-					return $pos !== false ? substr($val, $pos+1) : $val;
+				//Reduce field values to fieldname
+				$fields = array_map(function($field) {
+					$pos = strpos($field, '.');
+					return $pos !== false ? substr($field, $pos+1) : $field;
 				}, $withHistory[$withHistoryKey]['fields']);
 
 				if(count($fields) > 0 && is_array($fields))
@@ -472,6 +484,13 @@ class Parser
 					$query->select($fields);
 				}
 
+				//Attach sorts
+				foreach($withHistory[$withHistoryKey]['sorts'] as $pair) {
+					$pos = strpos($pair[0], '.');
+					$pair = $pos !== false ? array(substr($pair[0], $pos+1), $pair[1]) : $pair;
+
+					call_user_func_array(array($query, 'orderBy'), $pair);
+				}		
 			};
 		}
 
@@ -493,9 +512,7 @@ class Parser
 	 */
 	protected function parseSort($sortParam)
 	{
-		$sortElems = explode(',', $sortParam);
-
-		foreach($sortElems as $sortElem) 
+		foreach(explode(',', $sortParam) as $sortElem) 
 		{
 			//Check if ascending or derscenting(-) sort
 			if(preg_match('/^-.+/', $sortElem)) 
@@ -508,7 +525,13 @@ class Parser
 			}
 
 			$pair = array(preg_replace('/^-/', '', $sortElem), $direction);
-			call_user_func_array(array($this->query, 'orderBy'), $pair);
+
+			//Only add the sorts that are on the base resource
+			if(strpos($sortElem, '.') === false) {
+				call_user_func_array(array($this->query, 'orderBy'), $pair);
+			} else {
+				$this->additionalSorts[] = $pair;
+			}
 		}
 	}
 
