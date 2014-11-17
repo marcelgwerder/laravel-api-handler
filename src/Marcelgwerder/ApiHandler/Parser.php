@@ -11,6 +11,7 @@ use \BadMethodCallException;
 
 class Parser
 {
+
 	/**
 	 * The builder Instance.
 	 *
@@ -48,7 +49,7 @@ class Parser
 
 	/**
 	 * If the response should be in an envelope or not
-	 * 
+	 *
 	 * @var boolean
 	 */
 	public $envelope;
@@ -62,7 +63,7 @@ class Parser
 
 	/**
 	 * The original query builder instance.
-	 * 
+	 *
 	 * @var \Illuminate\Database\Query\Builder
 	 */
 	protected $originalQuery;
@@ -87,18 +88,11 @@ class Parser
 	protected $functionalParams;
 
 	/**
-	 * All fields that belong to a relation
+	 * All given fields
 	 *
 	 * @var array
 	 */
 	protected $additionalFields = array();
-
-	/**
-	 * All sorts that belong to a relation
-	 *
-	 * @var array
-	 */
-	protected $additionalSorts = array();
 
 	/**
 	 * If builder is an eloquent builder or not
@@ -116,7 +110,7 @@ class Parser
 
 	/**
 	 * Instantiate the Parser class
-	 * 
+	 *
 	 * @param mixed 	$builder
 	 * @param array 	$params
 	 */
@@ -125,9 +119,6 @@ class Parser
 		$this->builder = $builder;
 		$this->params = $params;
 		$this->config = $config;
-
-		//Set the package
-		$this->config->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
 
 		$this->prefix = $this->config->get('laravel-api-handler::prefix');
 		$this->envelope = $this->config->get('laravel-api-handler::envelope');
@@ -138,9 +129,9 @@ class Parser
 		$this->isEloquentBuilder = $builder instanceof EloquentBuilder;
 		$this->isQueryBuilder = $builder instanceof QueryBuilder;
 
-		if($this->isEloquentBuilder) 
+		if($this->isEloquentBuilder)
 		{
-			$this->query = $builder->getQuery();
+   			$this->query = $builder->getQuery();
 		}
 		else if($isEloquentRelation)
 		{
@@ -157,7 +148,7 @@ class Parser
 
 			$this->isEloquentBuilder = true;
 		}
-		else if($this->isQueryBuilder) 
+		else if($this->isQueryBuilder)
 		{
 			$this->query = $builder;
 		}
@@ -173,10 +164,10 @@ class Parser
 	/**
 	 * Parse the query parameters with the given options.
 	 * Either for a single dataset or multiple.
-	 * 
-	 * @param  mixed  	$options  
+	 *
+	 * @param  mixed  	$options
 	 * @param  boolean 	$multiple
-	 * @return void    
+	 * @return void
 	 */
 	public function parse($options, $multiple = false)
 	{
@@ -185,6 +176,12 @@ class Parser
 		if($multiple)
 		{
 			$fullTextSearchColumns = $options;
+
+			//Parse and apply sort elements using the laravel "orderBy" function
+			if($sort = $this->getParam('sort'))
+			{
+				$this->parseSort($sort);
+			}
 
 			//Parse and apply offset using the laravel "offset" function
 			if($offset = $this->getParam('offset'))
@@ -213,7 +210,7 @@ class Parser
 			{
 				$this->parseFulltextSearch($q, $fullTextSearchColumns);
 			}
-		} 
+		}
 		else
 		{
 			$identification = $options;
@@ -235,17 +232,11 @@ class Parser
 			$this->parseFields($fields);
 		}
 
-		//Parse and apply sort elements using the laravel "orderBy" function
-		if($sort = $this->getParam('sort'))
-		{
-			$this->parseSort($sort);
-		}
-
-		//Parse and apply with elements using the Laravel "with" function 
+		//Parse and apply with elements using the Laravel "with" function
 		if(($with = $this->getParam('with')) && $this->isEloquentBuilder)
 		{
 			$this->parseWith($with);
-		}		
+		}
 
 		//Parse the config params
 		if($config = $this->getParam('config'))
@@ -262,7 +253,7 @@ class Parser
 
 	/**
 	 * Set the config object
-	 * 
+	 *
 	 * @param 	mixed 	$config
 	 */
 	public function setConfigHandler($config)
@@ -271,8 +262,8 @@ class Parser
 	}
 
 	/**
-	 * Get a parameter 
-	 * 
+	 * Get a parameter
+	 *
 	 * @param  string 			$param
 	 * @return string|boolean
 	 */
@@ -288,7 +279,7 @@ class Parser
 
 	/**
 	 * Get the relevant filter parameters
-	 * 
+	 *
 	 * @return array|boolean
 	 */
 	protected function getFilterParams()
@@ -311,8 +302,8 @@ class Parser
 
 	/**
 	 * Parse the fields parameter and return an array of fields
-	 * 
-	 * @param  string 	$fieldsParam 
+	 *
+	 * @param  string 	$fieldsParam
 	 * @return void
 	 */
 	protected function parseFields($fieldsParam)
@@ -326,7 +317,7 @@ class Parser
 			{
 				$fields[] = trim($field);
 			}
-			else 
+			else
 			{
 				$this->additionalFields[] = trim($field);
 			}
@@ -340,8 +331,8 @@ class Parser
 
 	/**
 	 * Parse the with parameter
-	 * 
-	 * @param  string 	$withParam 
+	 *
+	 * @param  string 	$withParam
 	 * @return void
 	 */
 	protected function parseWith($withParam)
@@ -377,29 +368,19 @@ class Parser
 				}
 
 				//Get all given fields related to the current part
-				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($field) use($part) 
-				{
-					return preg_match('/'.$part.'\..+$/', $field);
-				});
-
-				//Get all given sorts related to the current part
-				$withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function($pair) use($part) 
-				{
-					return preg_match('/'.$part.'\..+$/', $pair[0]);
+				$withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function($val) use($part) {
+					return preg_match('/'.$part.'\..+$/', $val);
 				});
 
 				if(!isset($previousModel))
 				{
 					$previousModel = $baseModel;
 				}
-				
+
 				//Throw a new ApiHandlerException if the relation doesn't exist
-				try
-				{
+				try{
 					$relation = call_user_func(array($previousModel, $part));
-				} 
-				catch (BadMethodCallException $e) 
-				{
+				} catch (BadMethodCallException $e) {
 					$matches = array();
 					$message = $e->getMessage();
 
@@ -408,7 +389,7 @@ class Parser
 					if(isset($matches[1]))
 					{
 						$relation = $matches[1];
-						throw new ApiHandlerException('UnknownResourceRelation', array('relation' => $relation));
+						throw new ApiHandlerException('UnknownResourceRelation', null, array('relation' => $relation));
 					}
 				}
 
@@ -416,12 +397,12 @@ class Parser
 				$relationType = $this->getRelationType($relation);
 
 				//Preserve backwards compatibility
-				if(method_exists($relation , 'getQualifiedOtherKeyName') && method_exists($relation , 'getQualifiedForeignKey')) 
+				if(method_exists($relation , 'getQualifiedOtherKeyName') && method_exists($relation , 'getQualifiedForeignKey'))
 				{
 					$primaryKey = $relation->getOtherKey();
 					$foreignKey = $relation->getQualifiedForeignKey();
-				} 
-				else 
+				}
+				else
 				{
 					$primaryKey = $model->getKeyName();
 					$foreignKey = $relation->getForeignKey();
@@ -437,8 +418,8 @@ class Parser
 				{
 					$firstKey = $foreignKey;
 					$secondKey = $primaryKey;
-				} 
-		
+				}
+
 				//Skip automatic adding of keys because it's not needed for many to many relations
 				if($relationType != 'BelongsToMany')
 				{
@@ -450,7 +431,7 @@ class Parser
 							$fields[] = $firstKey;
 						}
 					}
-					else 
+					else
 					{
 						if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
 						{
@@ -477,11 +458,10 @@ class Parser
 		{
 			$withsArr[$withHistoryKey] = function($query) use ($withHistory, $withHistoryKey){
 
-				//Reduce field values to fieldname
-				$fields = array_map(function($field) 
-				{
-					$pos = strpos($field, '.');
-					return $pos !== false ? substr($field, $pos+1) : $field;
+				//Reduce values to fieldname
+				$fields = array_map(function($val) {
+					$pos = strpos($val, '.');
+					return $pos !== false ? substr($val, $pos+1) : $val;
 				}, $withHistory[$withHistoryKey]['fields']);
 
 				if(count($fields) > 0 && is_array($fields))
@@ -489,19 +469,11 @@ class Parser
 					$query->select($fields);
 				}
 
-				//Attach sorts
-				foreach($withHistory[$withHistoryKey]['sorts'] as $pair) 
-				{
-					$pos = strpos($pair[0], '.');
-					$pair = $pos !== false ? array(substr($pair[0], $pos+1), $pair[1]) : $pair;
-
-					call_user_func_array(array($query, 'orderBy'), $pair);
-				}		
 			};
 		}
 
 		$this->builder->with($withsArr);
-	
+
 		//Renew base fields
 		if(count($fields) > 0)
 		{
@@ -512,65 +484,59 @@ class Parser
 	/**
 	 * Parse the sort param and determine whether the sorting is ascending or descending.
 	 * A descending sort has a leading "-". Apply it to the query.
-	 * 
-	 * @param  string 	$sortParam 
-	 * @return void 
+	 *
+	 * @param  string 	$sortParam
+	 * @return void
 	 */
 	protected function parseSort($sortParam)
 	{
-		foreach(explode(',', $sortParam) as $sortElem) 
+		$sortElems = explode(',', $sortParam);
+
+		foreach($sortElems as $sortElem)
 		{
 			//Check if ascending or derscenting(-) sort
-			if(preg_match('/^-.+/', $sortElem)) 
+			if(preg_match('/^-.+/', $sortElem))
 			{
 				$direction = 'desc';
 			}
-			else 
+			else
 			{
 				$direction = 'asc';
 			}
 
 			$pair = array(preg_replace('/^-/', '', $sortElem), $direction);
-
-			//Only add the sorts that are on the base resource
-			if(strpos($sortElem, '.') === false) 
-			{
-				call_user_func_array(array($this->query, 'orderBy'), $pair);
-			} 
-			else 
-			{
-				$this->additionalSorts[] = $pair;
-			}
+			call_user_func_array(array($this->query, 'orderBy'), $pair);
 		}
 	}
 
 	/**
 	 * Parse the remaining filter params
-	 * 
-	 * @param  array 	$filterParams 
+	 *
+	 * @param  array 	$filterParams
 	 * @return void
 	 */
-	protected function parseFilter($filterParams) 
+	protected function parseFilter($filterParams)
 	{
 		$supportedPostfixes = array(
-			'st' => '<', 
-			'gt' => '>', 
-			'min' => '>=', 
-			'max' => '<=', 
+			'st' => '<',
+			'gt' => '>',
+			'min' => '>=',
+			'max' => '<=',
 			'lk' => 'LIKE',
+			'ilk' => 'ILIKE',
 			'not-lk' => 'NOT LIKE',
 			'not' => '!=',
 		);
-		
+
 		$supportedPrefixesStr = implode('|', $supportedPostfixes);
 		$supportedPostfixesStr = implode('|', array_keys($supportedPostfixes));
 
-		foreach($filterParams as $filterParamKey => $filterParamValue) 
+		foreach($filterParams as $filterParamKey => $filterParamValue)
 		{
 			$keyMatches = array();
-			
+
 			//Matches every parameter with an optional prefix and/or postfix
-			//e.g. not-title-lk, title-lk, not-title, title 
+			//e.g. not-title-lk, title-lk, not-title, title
 			$keyRegex = '/^(?:('.$supportedPrefixesStr.')-)?(.*?)(?:-('.$supportedPostfixesStr.')|$)/';
 
 			preg_match($keyRegex, $filterParamKey, $keyMatches);
@@ -586,29 +552,29 @@ class Parser
 
 			$column = $keyMatches[2];
 
-			$values = explode('|', $filterParamValue);
+		 	$values = explode('|', $filterParamValue);
 
-			if(count($values) > 1)
-			{
+		 	if(count($values) > 1)
+		 	{
 				$this->query->where(function($query) use($column, $comparator, $values)
-				{
-					foreach($values as $value)
-					{
-						if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+		        {
+		            foreach($values as $value)
+		            {
+		            	if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
 
-						//Link the filters with AND of there is a "not" and with OR if there's none
-						if($comparator == '!=' || $comparator == 'NOT LIKE')
-						{
-							$query->where($column, $comparator, $value);
-						}
-						else 
-						{
-							$query->orWhere($column, $comparator, $value);
-						}
-					}
-				});
+		            	//Link the filters with AND of there is a "not" and with OR if there's none
+		            	if($comparator == '!=' || $comparator == 'NOT LIKE')
+		            	{
+		            		$query->where($column, $comparator, $value);
+		            	}
+		            	else
+		            	{
+		            		$query->orWhere($column, $comparator, $value);
+		            	}
+		            }
+		        });
 			}
-			else 
+			else
 			{
 				$value = $values[0];
 
@@ -621,14 +587,14 @@ class Parser
 
 	/**
 	 * Parse the fulltext search parameter q
-	 * 
-	 * @param  string 	$qParam 
+	 *
+	 * @param  string 	$qParam
 	 * @param  array 	$fullTextSearchColumns
 	 * @return void
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
 	{
-		if($qParam == '') 
+		if($qParam == '')
 		{
 			//Add where that will never be true
 			$this->query->where($fullTextSearchColumns[0], '$!7d3|//e335700d2f()49f8|&3a95||||0edb105|||');
@@ -642,9 +608,9 @@ class Parser
 			foreach($fullTextSearchColumns as $column)
 			{
 				foreach($keywords as $keyword)
-				{
-					$query->orWhere($column, 'LIKE', '%'.$keyword.'%');
-				}
+		        {
+		            $query->orWhere($column, 'LIKE', '%'.$keyword.'%');
+		        }
 			}
 		});
 	}
