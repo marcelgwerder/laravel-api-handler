@@ -20,9 +20,6 @@ class ApiHandlerException extends \Exception
 	{
 		$config = app()->make('config');
 
-		//Set the package
-		$config->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
-
 		$errors = $config->get('laravel-api-handler::errors');
 		$internalErrors = $config->get('laravel-api-handler::internal_errors');
 

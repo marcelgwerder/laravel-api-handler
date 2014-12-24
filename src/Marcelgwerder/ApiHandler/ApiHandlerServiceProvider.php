@@ -21,7 +21,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
 	 */
 	public function boot()
 	{
-		$this->package('marcelgwerder/laravel-api-handler');
+		$this->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
 	}
 
 	/**
@@ -41,18 +41,6 @@ class ApiHandlerServiceProvider extends ServiceProvider
 			$apiHandler->setRequest(Request::instance());
 
 			return $apiHandler;
-
 		});
 	}
-
-	/**
-	 * Get the services provided by the provider.
-	 *
-	 * @return array
-	 */
-	public function provides()
-	{
-		return array();
-	}
-
 }

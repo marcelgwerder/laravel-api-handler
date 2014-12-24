@@ -117,17 +117,14 @@ class Parser
 	/**
 	 * Instantiate the Parser class
 	 * 
-	 * @param mixed 	$builder
-	 * @param array 	$params
+	 * @param mixed $builder
+	 * @param array $params
 	 */
 	public function __construct($builder, $params, $config)
 	{
 		$this->builder = $builder;
 		$this->params = $params;
 		$this->config = $config;
-
-		//Set the package
-		$this->config->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
 
 		$this->prefix = $this->config->get('laravel-api-handler::prefix');
 		$this->envelope = $this->config->get('laravel-api-handler::envelope');
@@ -174,8 +171,8 @@ class Parser
 	 * Parse the query parameters with the given options.
 	 * Either for a single dataset or multiple.
 	 * 
-	 * @param  mixed  	$options  
-	 * @param  boolean 	$multiple
+	 * @param  mixed    $options  
+	 * @param  boolean  $multiple
 	 * @return void    
 	 */
 	public function parse($options, $multiple = false)
@@ -263,7 +260,7 @@ class Parser
 	/**
 	 * Set the config object
 	 * 
-	 * @param 	mixed 	$config
+	 * @param mixed $config
 	 */
 	public function setConfigHandler($config)
 	{
@@ -273,7 +270,7 @@ class Parser
 	/**
 	 * Get a parameter 
 	 * 
-	 * @param  string 			$param
+	 * @param  string         $param
 	 * @return string|boolean
 	 */
 	protected function getParam($param)
@@ -298,7 +295,7 @@ class Parser
 
 		$filterParams = array_diff_ukey($this->params, $reserved, function($a, $b) use ($prefix)
 		{
-			return ($a != $prefix.$b);
+			return $a != $prefix.$b;
 		});
 
 		if(count($filterParams) > 0)
@@ -341,7 +338,7 @@ class Parser
 	/**
 	 * Parse the with parameter
 	 * 
-	 * @param  string 	$withParam 
+	 * @param  string $withParam 
 	 * @return void
 	 */
 	protected function parseWith($withParam)
@@ -371,9 +368,7 @@ class Parser
 				//Create new history element
 				if(!isset($withHistory[$currentHistoryPath]))
 				{
-					$withHistory[$currentHistoryPath] = array(
-						'fields' => array()
-					);
+					$withHistory[$currentHistoryPath] = array('fields' => array());
 				}
 
 				//Get all given fields related to the current part
@@ -513,7 +508,7 @@ class Parser
 	 * Parse the sort param and determine whether the sorting is ascending or descending.
 	 * A descending sort has a leading "-". Apply it to the query.
 	 * 
-	 * @param  string 	$sortParam 
+	 * @param  string $sortParam 
 	 * @return void 
 	 */
 	protected function parseSort($sortParam)
@@ -521,11 +516,11 @@ class Parser
 		foreach(explode(',', $sortParam) as $sortElem) 
 		{
 			//Check if ascending or derscenting(-) sort
-			if(preg_match('/^-.+/', $sortElem)) 
+			if(preg_match('/^-.+/', $sortElem))
 			{
 				$direction = 'desc';
 			}
-			else 
+			else
 			{
 				$direction = 'asc';
 			}
@@ -536,8 +531,8 @@ class Parser
 			if(strpos($sortElem, '.') === false) 
 			{
 				call_user_func_array(array($this->query, 'orderBy'), $pair);
-			} 
-			else 
+			}
+			else
 			{
 				$this->additionalSorts[] = $pair;
 			}
@@ -547,7 +542,7 @@ class Parser
 	/**
 	 * Parse the remaining filter params
 	 * 
-	 * @param  array 	$filterParams 
+	 * @param  array $filterParams 
 	 * @return void
 	 */
 	protected function parseFilter($filterParams) 
@@ -622,8 +617,8 @@ class Parser
 	/**
 	 * Parse the fulltext search parameter q
 	 * 
-	 * @param  string 	$qParam 
-	 * @param  array 	$fullTextSearchColumns
+	 * @param  string $qParam 
+	 * @param  array  $fullTextSearchColumns
 	 * @return void
 	 */
 	protected function parseFullTextSearch($qParam, $fullTextSearchColumns)
@@ -652,7 +647,7 @@ class Parser
 	/**
 	 * Parse the meta parameter and prepare an array of meta provider objects.
 	 * 
-	 * @param  array 	$metaParam 
+	 * @param  array $metaParam 
 	 * @return void
 	 */
 	protected function parseConfig($configParam)

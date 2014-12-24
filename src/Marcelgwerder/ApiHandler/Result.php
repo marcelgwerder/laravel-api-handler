@@ -22,8 +22,8 @@ class Result
 	/**
 	 * Create a new result
 	 *
-	 * @param  Marcelgwerder\ApiHandler\Parser 	$parse
-	 * @param  Response						  	$response
+	 * @param  Marcelgwerder\ApiHandler\Parser $parse
+	 * @param  Response                        $response
 	 * @return void
 	 */
 	public function __construct(Parser $parser, $response)
