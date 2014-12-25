@@ -8,6 +8,7 @@ use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \ArrayObject;
 use \InvalidArgumentException;
 use \BadMethodCallException;
+use \ReflectionObject;
 
 class Parser
 {
@@ -389,24 +390,12 @@ class Parser
 				}
 				
 				//Throw a new ApiHandlerException if the relation doesn't exist
-				try
-				{
-					$relation = call_user_func(array($previousModel, $part));
-				} 
-				catch (BadMethodCallException $e) 
-				{
-					$matches = array();
-					$message = $e->getMessage();
-
-					preg_match('/::(.+)\(\)$/', $message, $matches);
-
-					if(isset($matches[1]))
-					{
-						$relation = $matches[1];
-						throw new ApiHandlerException('UnknownResourceRelation', array('relation' => $relation));
-					}
+				//or is not properly marked as a relation
+				if(!$this->isRelation($previousModel, $part)) {
+					throw new ApiHandlerException('UnknownResourceRelation', array('relation' => $part));
 				}
 
+				$relation = call_user_func(array($previousModel, $part));
 				$model = $relation->getModel();
 				$relationType = $this->getRelationType($relation);
 
@@ -716,5 +705,28 @@ class Parser
 		{
 			return 'BelongsToMany';
 		}
+	}
+
+	/**
+	 * Check if there exists a method marked with the "@Relation"
+	 * annotation on the given model.
+	 * 
+	 * @param  Illuminate\Database\Eloquent\Model  $model
+	 * @param  string                              $relationName
+	 * @return boolean
+	 */
+	protected function isRelation($model, $relationName) 
+	{
+    	if(!method_exists($model, $relationName)) return false;
+
+    	$reflextionObject = new ReflectionObject($model);
+    	$doc = $reflextionObject->getMethod($relationName)->getDocComment();
+
+    	if($doc && strpos($doc, '@Relation')) {
+ 			return true;
+    	}
+    	else {
+    		return false;
+    	}
 	}
 }
