@@ -1,7 +1,7 @@
 ##Laravel API Handler##
 [![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler) [![Latest Stable Version](https://poser.pugx.org/marcelgwerder/laravel-api-handler/v/stable.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![Total Downloads](https://poser.pugx.org/marcelgwerder/laravel-api-handler/downloads.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![License](https://poser.pugx.org/marcelgwerder/laravel-api-handler/license.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler)
 
-This helper package provides functionality for parsing the url of a rest api request.
+This helper package provides functionality for parsing the URL of a REST-API request.
 
 ###Installation###
 
@@ -49,7 +49,7 @@ This allows us to pass multiple conditions like:
 ApiHandler::parseSingle($books, array('id_origin' => 'Random Bookstore Ltd', 'id' => 1337));
 ```
 
-###URL Parsing###
+###URL parsing###
 
 Url parsing currently supports:
 * Limit the fields
@@ -62,7 +62,7 @@ Url parsing currently supports:
 
 There are two kind of api resources supported, a single object and a collection of objects.
 
-####A Single Object####
+####Single object####
 
 If you handle a GET request on a resource representing a single object like for example `/api/books/1`, use the `parseSingle` method.
 
@@ -75,7 +75,7 @@ If you handle a GET request on a resource representing a single object like for 
 ApiHandler::parseSingle($book, 1);
 ```
 
-####A Collection of Objects####
+####Collection of objects####
 
 If you handle a GET request on a resource representing multiple objects like for example `/api/books`, use the `parseMultiple` method.
 
@@ -149,8 +149,8 @@ Two ways of sorting, ascending and descending. Every column which should be sort
 /api/books?_sort=-title,created_at
 ```
 
-####Full Text Search####
-Two implementations of full text search supported.
+####Fulltext search####
+Two implementations of full text search are supported.
 You can choose which one to use by changing the `fulltext` option in the config file to either `default` or `native`.
 
 **Limited custom implementation (default)**
@@ -175,7 +175,7 @@ Each result will also contain a `_score` column which allows you to sort the res
 
 You can adjust the name of this column by modifying the `fulltext_score_column` setting in the config file.
 
-####Limit The Result Set###
+####Limit the result set###
 To define the maximum amount of datasets in the result, use `_limit`.
 ```
 /api/books?_limit=50
@@ -186,7 +186,7 @@ To define the offset of the datasets in the result, use `_offset`.
 ```
 Be aware that in order to use `offset` you always have to specify a `limit` too. MySQL throws an error for offset definition without a limit.
 
-####Include Related Models####
+####Include related models####
 The api handler also supports Eloquent relationships. So if you want to get all the books with their authors, just add the authors to the `_with` parameter.
 ```
 /api/books?_with=author
@@ -200,8 +200,8 @@ To get this to work though you have to add the `@Relation` annotation to each of
 
 ```php
 /**
-* @Relation
-*/
+ * @Relation
+ */
 public function author() {
     return $this->belongsTo('Author');  
 }
@@ -210,7 +210,7 @@ This is necessary for security reasons, so that only real relation methods can b
 
 ***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
 
-####Include Meta Information####
+####Include meta information####
 It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
 
 The `total-count` which represents the count of all elements of a resource or to be more specific, the count on the originally passed query builder instance.
