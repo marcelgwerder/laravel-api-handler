@@ -153,6 +153,8 @@ Two ways of sorting, ascending and descending. Every column which should be sort
 Two implementations of full text search are supported.
 You can choose which one to use by changing the `fulltext` option in the config file to either `default` or `native`.
 
+***Note:*** When using an empty `_q` param the search will always return an empty result.
+
 **Limited custom implementation (default)**
 
 A given text is split into keywords which then are searched in the database. Whenever one of the keyword exists, the corresponding row is included in the result set.
@@ -208,7 +210,7 @@ public function author() {
 ```
 This is necessary for security reasons, so that only real relation methods can be invoked by using `_with`.
 
-***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
+***Note:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
 
 ####Include meta information####
 It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
