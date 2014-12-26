@@ -222,7 +222,9 @@ class Parser
 			}
 			else if(is_array($identification))
 			{
-				$this->query->where($identification);
+				foreach($identification as $column => $value) {
+					$this->query->where($column, $value);
+				}
 			}
 		}
 
@@ -487,7 +489,11 @@ class Parser
 		$this->builder->with($withsArr);
 
 		//Merge the base fields
-		$this->query->columns = array_merge($this->query->columns, $fields);
+		if(count($fields) > 0)
+		{
+			if(!is_array($this->query->columns)) $this->query->columns = array();
+			$this->query->columns = array_merge($this->query->columns, $fields);
+		}
 	}
 
 	/**
@@ -628,7 +634,8 @@ class Parser
 			$this->query->whereRaw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE)');
 
 			//Add the * to the selects because of the score column
-			if(count($this->query->columns) == 0) {
+			if(count($this->query->columns) == 0) 
+			{
 				$this->query->addSelect('*');
 			}
 
@@ -741,10 +748,12 @@ class Parser
 		$reflextionObject = new ReflectionObject($model);
 		$doc = $reflextionObject->getMethod($relationName)->getDocComment();
 
-		if($doc && strpos($doc, '@Relation') !== -1) {
+		if($doc && strpos($doc, '@Relation') !== -1) 
+		{
 			return true;
 		}
-		else {
+		else 
+		{
 			return false;
 		}
 	}
