@@ -9,26 +9,56 @@ Install the package through composer by adding it to your `composer.json` file:
 
 ```
 "require": {
-    "marcelgwerder/laravel-api-handler": "0.3.*"
+    "marcelgwerder/laravel-api-handler": "0.4.*"
 }
 ```
 Then run `composer update`. Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
 ```
 'Marcelgwerder\ApiHandler\ApiHandlerServiceProvider'
 ```
+Now import the `ApiHandler` facade into your classes:
+```php
+use Marcelgwerder\ApiHandler\Facades\ApiHandler;
+```
+Or set an alias in `app.php`:
+```
+'ApiHandler' => 'Marcelgwerder\ApiHandler\Facades\ApiHandler',
+```
 That's it!
+
+###Migrate from 0.3.x to 0.4.x###
+
+####Relation annotations####
+
+Relation methods now need an `@Relation` annotation to prove that they are relation methods and not any other methods (see issue #11).
+
+```php
+/**
+ * @Relation
+ */
+public function author() {
+    return $this->belongsTo('Author');  
+}
+```
+####Custom identification columns####
+
+If you pass an array as the second parameter to `parseSingle`, there now have to be column/value pairs.
+This allows us to pass multiple conditions like:
+
+```php
+ApiHandler::parseSingle($books, array('id_origin' => 'Random Bookstore Ltd', 'id' => 1337));
+```
 
 ###URL Parsing###
 
 Url parsing currently supports:
 * Limit the fields
 * Filtering
-* Limited full text search
+* Full text search
 * Sorting
 * Define limit and offset
 * Append related models
 * Append meta information (counts)
-
 
 There are two kind of api resources supported, a single object and a collection of objects.
 
@@ -38,7 +68,7 @@ If you handle a GET request on a resource representing a single object like for 
 
 **parseSingle($queryBuilder, $identification, [$queryParams]):**
 * **$queryBuilder**: Query builder object, Eloquent model or Eloquent relation
-* **$identification**: An integer used in the `id` column or an array with a column/value pair (`array('isbn', '1234')`) used as a unique identifier of the object.
+* **$identification**: An integer used in the `id` column or an array column/value pair(s) (`array('isbn' => '1234')`) used as a unique identifier of the object.
 * **$queryParams**: An array containing the query parameters. If not defined, the original GET parameters are used.
 
 ```php
@@ -75,7 +105,7 @@ Returns a Laravel `Response` object including body, headers and HTTP status code
 Returns an array of prepared headers.
 
 **getMetaProviders():**
-Returns an array of meta provider object. Each of these objects provide a specific type of meta data through its `get()` method.
+Returns an array of meta provider objects. Each of these objects provide a specific type of meta data through its `get()` method.
 
 ####Filtering####
 Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
@@ -83,7 +113,7 @@ Every query parameter, except the predefined functions `_fields`, `_with`, `_sor
 ```
 /api/books?title=The Lord of the Rings
 ```
-All the filters are combined with an `AND` oparator.
+All the filters are combined with an `AND` operator.
 ```
 /api/books?title-lk=The Lord*&created_at-min=2014-03-14 12:55:02
 ```
@@ -91,7 +121,7 @@ The above example would result in the following SQL where:
 ```sql
 WHERE `title` LIKE "The Lord%" AND `created_at` >= "2014-03-14 12:55:02"
 ```
-Its also possible to use multiple values for one filter. Multiple values are seperated by a pipe `|`.
+Its also possible to use multiple values for one filter. Multiple values are separated by a pipe `|`.
 Multiple values are combined with `OR` except when there is a `-not` suffix, then they are combined with `AND`.
 For example all the books with the id 5 or 6:
 ```
@@ -102,11 +132,10 @@ Or all the books except the ones with id 5 or 6:
 /api/books?id-not=5|6
 ```
 
-
 #####Suffixes#####
 Suffix        | Operator      | Meaning
 ------------- | ------------- | -------------
--lk           | LIKE          | Same as the SQL `LIKE` opearator
+-lk           | LIKE          | Same as the SQL `LIKE` operator
 -not-lk       | NOT LIKE      | Same as the SQL `NOT LIKE` operator
 -min          | >=            | Greater than or equal to
 -max          | <=            | Smaller than or equal to
@@ -115,18 +144,36 @@ Suffix        | Operator      | Meaning
 -not          | !=            | Not equal to
 
 ####Sorting####
-Two ways of sorting, ascending and descending. Every column which should be sorted descending allways starts with a `-`.
+Two ways of sorting, ascending and descending. Every column which should be sorted descending always starts with a `-`.
 ```
 /api/books?_sort=-title,created_at
 ```
 
 ####Full Text Search####
-The api handler url parsing function also supports a limited full text search. A given text is split into keywords which then are searched in the database. Whenever one of the keyword exists, the corresponding row is included in the result set.
+Two implementations of full text search supported.
+You can choose which one to use by changing the `fulltext` option in the config file to either `default` or `native`.
+
+**Limited custom implementation (default)**
+
+A given text is split into keywords which then are searched in the database. Whenever one of the keyword exists, the corresponding row is included in the result set.
 
 ```
 /api/books?_q=The Lord of the Rings
 ```
 The above example returns every row that contains one of the keywords `The`, `Lord`, `of`, `the`, `Rings` in one of its columns. The columns to consider in full text search are passed to `parseMultiple`.
+
+**Native MySQL implementation**
+
+If your MySQL version supports fulltext search for the engine you use you can use this advanced search in the api handler.  
+Just change the `fulltext` config option to `native` and make sure that there is a proper fulltext index on the columns you pass to `parseMultiple`.
+
+Each result will also contain a `_score` column which allows you to sort the results according to how well they match with the search terms. E.g.
+
+```
+/api/books?_q=The Lord of the Rings&_sort=-_score
+```
+
+You can adjust the name of this column by modifying the `fulltext_score_column` setting in the config file.
 
 ####Limit The Result Set###
 To define the maximum amount of datasets in the result, use `_limit`.
@@ -137,7 +184,7 @@ To define the offset of the datasets in the result, use `_offset`.
 ```
 /api/books?_offset=20&_limit=50
 ```
-Be aware that in order to use `offset` you alwas have to specify a `limit` too. MySQL throws an error for offset definition without a limit.
+Be aware that in order to use `offset` you always have to specify a `limit` too. MySQL throws an error for offset definition without a limit.
 
 ####Include Related Models####
 The api handler also supports Eloquent relationships. So if you want to get all the books with their authors, just add the authors to the `_with` parameter.
@@ -148,6 +195,18 @@ Relationships, can also be nested:
 ```
 /api/books?_with=author.awards
 ```
+
+To get this to work though you have to add the `@Relation` annotation to each of your relation methods like:
+
+```php
+/**
+* @Relation
+*/
+public function author() {
+    return $this->belongsTo('Author');  
+}
+```
+This is necessary for security reasons, so that only real relation methods can be invoked by using `_with`.
 
 ***Important information:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
 
@@ -160,7 +219,7 @@ The `filter-count` which additionally takes filters into account. They can for e
 ```
 /api/books?id-gt=5&_config=meta-total-count,meta-filter-count
 ```
-All meta fields are provided in the response header. There is no such "envelope" thing in the response body.
+All meta fields are provided in the response header by default.
 The following custom headers are used:
 
 Config            | Header
@@ -177,10 +236,10 @@ The envelope has the following structure:
 ```json
 {
   "meta": {
-    ...
+
   },
   "data": [
-    ...
+
   ]
 }
 ```
