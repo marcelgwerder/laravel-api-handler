@@ -206,10 +206,10 @@ class Parser
 			}
 
 			//Parse an apply the fulltext search using the different laravel "where" functions
-			//The fulltext search is only applied to the columns passed by $fullTextSearchColumns
-			if($q = $this->getParam('q'))
+			//The fulltext search is only applied to the columns passed by $fullTextSearchColumns.
+			if($this->getParam('q') !== false)
 			{
-				$this->parseFulltextSearch($q, $fullTextSearchColumns);
+				$this->parseFulltextSearch($this->getParam('q'), $fullTextSearchColumns);
 			}
 		} 
 		else
@@ -618,16 +618,17 @@ class Parser
 		if($qParam == '') 
 		{
 			//Add where that will never be true
-			$this->query->where($fullTextSearchColumns[0], '$!7d3|//e335700d2f()49f8|&3a95||||0edb105|||');
+			$this->query->whereRaw('0 = 1');
+			
 			return;
 		}
-
-		$keywords = explode(' ', $qParam);
 
 		$fulltextType = $this->config->get('laravel-api-handler::fulltext');
 
 		if($fulltextType == 'native') 
 		{
+			//Use pdo's quote method to be protected against sql-injections.
+			//The usual placeholders unfortunately don't seem to work using AGAINST().
 			$qParam = $this->query->getConnection()->getPdo()->quote($qParam);
 
 			//Use native fulltext search
@@ -645,6 +646,8 @@ class Parser
 		}
 		else 
 		{
+			$keywords = explode(' ', $qParam);
+
 			//Use default php implementation
 			$this->query->where(function($query) use($fullTextSearchColumns, $keywords)
 			{
