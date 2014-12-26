@@ -7,6 +7,9 @@ class User extends \Illuminate\Database\Eloquent\Model
 {
 	protected $connection = 'mysql';
 
+	/**
+	 * @Relation
+	 */
 	public function comments()
 	{
 		return $this->hasMany('Comment');

@@ -332,8 +332,11 @@ class Parser
 
 		if(count($fields) > 0)
 		{
-			$this->query->select($fields);
+			$this->query->addSelect($fields);
 		}
+
+		//Remove * if is set in fields
+		$this->query->columns = array_diff($this->query->columns, array('*'));
 	}
 
 	/**
@@ -363,6 +366,7 @@ class Parser
 
 				//Get the previous history path (e.g. if current is a.b.c the previous is a.b)
 				$previousHistoryPath = implode('.', array_splice($partsCopy, 0, $i));
+
 				//Get the current history part based on the previous one
 				$currentHistoryPath = $previousHistoryPath ? $previousHistoryPath.'.'.$part : $part;
 
@@ -423,29 +427,25 @@ class Parser
 					$secondKey = $primaryKey;
 				} 
 		
-				//Skip automatic adding of keys because it's not needed for many to many relations
-				if($relationType != 'BelongsToMany')
+				//Check if we're on level 1 (e.g. a and not a.b)
+				if($previousHistoryPath == '')
 				{
-					//Check if we're on level 1 (e.g. a and not a.b)
-					if($previousHistoryPath == '')
+					if($fieldsCount > 0 && !in_array($primaryKey, $fields))
 					{
-						if($fieldsCount > 0 && !in_array($primaryKey, $fields))
-						{
-							$fields[] = $firstKey;
-						}
+						$fields[] = $firstKey;
 					}
-					else 
+				}
+				else 
+				{
+					if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
 					{
-						if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
-						{
-							$withHistory[$previousHistoryPath]['fields'][] = $firstKey;
-						}
+						$withHistory[$previousHistoryPath]['fields'][] = $firstKey;
 					}
+				}
 
-					if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
-					{
-						$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
-					}
+				if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
+				{
+					$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
 				}
 
 				$previousModel = $model;
@@ -485,12 +485,9 @@ class Parser
 		}
 
 		$this->builder->with($withsArr);
-	
-		//Renew base fields
-		if(count($fields) > 0)
-		{
-			$this->query->addSelect($fields);
-		}
+
+		//Merge the base fields
+		$this->query->columns = array_merge($this->query->columns, $fields);
 	}
 
 	/**
@@ -621,16 +618,38 @@ class Parser
 
 		$keywords = explode(' ', $qParam);
 
-		$this->query->where(function($query) use($fullTextSearchColumns, $keywords)
+		$fulltextType = $this->config->get('laravel-api-handler::fulltext');
+
+		if($fulltextType == 'native') 
 		{
-			foreach($fullTextSearchColumns as $column)
-			{
-				foreach($keywords as $keyword)
-				{
-					$query->orWhere($column, 'LIKE', '%'.$keyword.'%');
-				}
+			$qParam = $this->query->getConnection()->getPdo()->quote($qParam);
+
+			//Use native fulltext search
+			$this->query->whereRaw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE)');
+
+			//Add the * to the selects because of the score column
+			if(count($this->query->columns) == 0) {
+				$this->query->addSelect('*');
 			}
-		});
+
+			//Add the score column
+			$scoreColumn = $this->config->get('laravel-api-handler::fulltext_score_column');
+			$this->query->addSelect($this->query->raw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE) as `'.$scoreColumn.'`'));
+		}
+		else 
+		{
+			//Use default php implementation
+			$this->query->where(function($query) use($fullTextSearchColumns, $keywords)
+			{
+				foreach($fullTextSearchColumns as $column)
+				{
+					foreach($keywords as $keyword)
+					{
+						$query->orWhere($column, 'LIKE', '%'.$keyword.'%');
+					}
+				}
+			});
+		}
 	}
 
 	/**
@@ -717,16 +736,16 @@ class Parser
 	 */
 	protected function isRelation($model, $relationName) 
 	{
-    	if(!method_exists($model, $relationName)) return false;
+		if(!method_exists($model, $relationName)) return false;
 
-    	$reflextionObject = new ReflectionObject($model);
-    	$doc = $reflextionObject->getMethod($relationName)->getDocComment();
+		$reflextionObject = new ReflectionObject($model);
+		$doc = $reflextionObject->getMethod($relationName)->getDocComment();
 
-    	if($doc && strpos($doc, '@Relation')) {
- 			return true;
-    	}
-    	else {
-    		return false;
-    	}
+		if($doc && strpos($doc, '@Relation') !== -1) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }

@@ -4,6 +4,7 @@ use \Illuminate\Database\Connection;
 use \Illuminate\Database\ConnectionResolver;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Http\JsonResponse;
+use \Illuminate\Database\Query\Expression;
 use Mockery as m;
 
 class ApiHandlerTest extends PHPUnit_Framework_TestCase 
@@ -33,8 +34,10 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             //Sort
             '_sort'         => '-title,first_name,comments.created_at',
             //Config
-            '_config'       => 'mode-default,meta-filter-count,meta-total-count'
+            '_config'       => 'mode-default,meta-filter-count,meta-total-count',
         );
+
+        $this->fulltextSelectExpression = new Expression('MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`');
 
         //Test data 
         $this->data = array(
@@ -45,6 +48,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //Mock the application
         $app = m::mock('AppMock');
         $app->shouldReceive('instance')->once()->andReturn($app);
+
         Illuminate\Support\Facades\Facade::setFacadeApplication($app);
 
         //Mock the config
@@ -53,8 +57,16 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
                ->with('laravel-api-handler::prefix')->andReturn('_');
         $config->shouldReceive('get')->once()
                ->with('laravel-api-handler::envelope')->andReturn(false);
+        $config->shouldReceive('get')->once()
+               ->with('laravel-api-handler::fulltext')->andReturn('default');
+        $config->shouldReceive('get')->once()
+               ->with('laravel-api-handler::fulltext')->andReturn('native');
+        $config->shouldReceive('get')->once()
+               ->with('laravel-api-handler::fulltext_score_column')->andReturn('_score');
         $config->shouldReceive('package')->once()
                ->with('marcelgwerder/laravel-api-handler', 'laravel-api-handler')->andReturn(true);
+
+        $app->shouldReceive('make')->once()->andReturn($config);
 
         //Mock the input
         $input = m::mock('InputMock');
@@ -65,12 +77,20 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $response = m::mock('ResponseMock');
         $response->shouldReceive('json')->once()->andReturn(new JsonResponse(['meta' => [], 'data' => new Collection()]));
 
+        //Mock pdo
+        $pdo = m::mock('PdoMock');
+        $pdo->shouldReceive('quote')->once()
+              ->with('Something to search')->andReturn('Something to search'); 
+
         //Mock the connection the same way as laravel does:
         //tests/Database/DatabaseEloquentBuilderTest.php#L408-L418 (mockConnectionForModel($model, $database))
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
         $connection = m::mock('Illuminate\Database\ConnectionInterface', array('getQueryGrammar' => $grammar, 'getPostProcessor' => $processor));
         $connection->shouldReceive('select')->once()->with('select * from `posts`', array())->andReturn($this->data);
+        $connection->shouldReceive('raw')->once()->with('MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
+                   ->andReturn($this->fulltextSelectExpression);
+        $connection->shouldReceive('getPdo')->once()->andReturn($pdo);
 
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', array('connection' => $connection));
 
@@ -183,7 +203,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $orders = $queryBuilder->orders;
         $this->assertContains(array('column' => 'title', 'direction' => 'desc'), $orders);
         $this->assertContains(array('column' => 'first_name', 'direction' => 'asc'), $orders);
-        
+
         //
         //With
         //
@@ -218,6 +238,44 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         call_user_func($eagerLoads['comments'], $query);
         $orders = $query->getQuery()->orders;
         $this->assertContains(array('column' => 'created_at', 'direction' => 'asc'), $orders);
+
+        //
+        // Fulltext search
+        //
+        
+        $builder = $this->apiHandler->parseMultiple($post, array('title','description'), ['_q' => 'Something to search'])->getBuilder();
+        $queryBuilder = $builder->getQuery();
+
+        $wheres = $queryBuilder->wheres;
+
+        //Test the nested filters
+        foreach($wheres as $where)
+        {
+            if($where['type'] == 'Nested')
+            {
+                $query = $where['query'];
+                $subWheres = $query->wheres;
+
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'), $subWheres[0]);
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'), $subWheres[1]);
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'), $subWheres[2]);
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'), $subWheres[3]);
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'), $subWheres[4]);
+                $this->assertEquals(array('type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'), $subWheres[5]);
+            }
+        }
+
+        $builder = $this->apiHandler->parseMultiple($post, array('title','description'), ['_q' => 'Something to search'])->getBuilder();
+        $queryBuilder = $builder->getQuery();
+
+        //Test the where 
+        $wheres = $queryBuilder->wheres;
+        $this->assertEquals(array('type' => 'raw', 'sql' => 'MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE)', 'boolean' => 'and'), $wheres[0]);
+
+        //Test the select     
+        $columns = $queryBuilder->columns;
+        $this->assertContains($this->fulltextSelectExpression, $columns);
+        $this->assertContains('*', $columns);
     }
 
     public function testGetResponse() 

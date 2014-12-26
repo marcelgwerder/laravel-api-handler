@@ -19,7 +19,6 @@ class ApiHandlerException extends \Exception
 	public function __construct($code, $replace = array(), $message = null) 
 	{
 		$config = app()->make('config');
-
 		$errors = $config->get('laravel-api-handler::errors');
 		$internalErrors = $config->get('laravel-api-handler::internal_errors');
 

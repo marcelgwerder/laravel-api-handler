@@ -26,6 +26,31 @@ return array(
 
 	'envelope' => false,
 
+
+	/*
+	|--------------------------------------------------------------------------
+	| Fulltext Search
+	|--------------------------------------------------------------------------
+	|
+	| The type of fulltext search, either "default" or "native".
+	| Native fulltext search for InnoDB tables is only supported by MySQL versions >= 5.6. 
+	|
+	*/
+
+	'fulltext' => 'default', 
+
+	/*
+	|--------------------------------------------------------------------------
+	| Fulltext Search Score Column
+	|--------------------------------------------------------------------------
+	|
+	| The name of the column containing the fulltext search score in native
+	| fulltext search mode.
+	|
+	*/
+
+	'fulltext_score_column' => '_score',
+
 	/*
 	|--------------------------------------------------------------------------
 	| Errors
