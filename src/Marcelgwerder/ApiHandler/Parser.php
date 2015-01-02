@@ -751,7 +751,7 @@ class Parser
 		$reflextionObject = new ReflectionObject($model);
 		$doc = $reflextionObject->getMethod($relationName)->getDocComment();
 
-		if($doc && strpos($doc, '@Relation') !== -1) 
+		if($doc && strpos($doc, '@Relation') !== false) 
 		{
 			return true;
 		}
