@@ -5,6 +5,8 @@ This helper package provides functionality for parsing the URL of a REST-API req
 
 ###Installation###
 
+***Note:*** This version is for Laravel 5. When using Laravel 4 you need to use version 0.4.x.
+
 Install the package through composer by adding it to your `composer.json` file:
 
 ```
@@ -26,7 +28,7 @@ Or set an alias in `app.php`:
 ```
 That's it!
 
-###Migrate from 0.3.x to 0.4.x###
+###Migrate from 0.3.x to >= 0.4.x###
 
 ####Relation annotations####
 
@@ -48,6 +50,12 @@ This allows us to pass multiple conditions like:
 ```php
 ApiHandler::parseSingle($books, array('id_origin' => 'Random Bookstore Ltd', 'id' => 1337));
 ```
+
+###Configuration###
+
+To override the configuration, create a file called `apihandler.php` in the config folder of your app.  
+Check out the config file in the package source to see what options are available.
+
 
 ###URL parsing###
 
