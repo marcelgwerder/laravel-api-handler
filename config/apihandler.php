@@ -89,4 +89,4 @@ return [
 		'InvalidQueryParameter' => 'InvalidQueryParameter'
 	]
 
-);
+];
