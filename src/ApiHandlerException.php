@@ -16,11 +16,11 @@ class ApiHandlerException extends \Exception
 	 * @param array  $replace
 	 * @param string $message
 	 */
-	public function __construct($code, $replace = array(), $message = null) 
+	public function __construct($code, $replace = [], $message = null) 
 	{
 		$config = app()->make('config');
-		$errors = $config->get('laravel-api-handler::errors');
-		$internalErrors = $config->get('laravel-api-handler::internal_errors');
+		$errors = $config->get('apihandler.errors');
+		$internalErrors = $config->get('apihandler.internal_errors');
 
 		//Check if error is internal or not
 		if(isset($internalErrors[$code]))

@@ -1,7 +1,7 @@
 {
 	"name": "marcelgwerder/laravel-api-handler",
 	"description": "Package providing helper functions for a Laravel REST-API ",
-	"keywords": ["api", "laravel", "rest"],
+	"keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
 	"homepage": "http://github.com/marcelgwerder/laravel-api-handler",
 	"license": "MIT",
 	"authors": [
@@ -11,21 +11,18 @@
 		}
 	],
 	"require": {
-		"php": ">=5.3.0",
-		"illuminate/support": "~4.1",
-		"illuminate/database": "~4.1",
-		"illuminate/http": "~4.1"
+		"php": ">=5.4.0",
+		"illuminate/support": "~5.0",
+		"illuminate/database": "~5.0",
+		"illuminate/http": "~5.0"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "3.7.*",
-		"mockery/mockery": "0.9.*@dev"
+		"phpunit/phpunit": "~4.5",
+		"mockery/mockery": "~0.9"
 	},
 	"autoload": {
-		"classmap": [
-			"src/migrations"
-		],
-		"psr-0": {
-			"Marcelgwerder\\ApiHandler\\": "src/"
+		"psr-4": {
+			"Marcelgwerder\\ApiHandler\\": "src"
 		}
 	},
 	"minimum-stability": "stable"

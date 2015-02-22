@@ -1,9 +1,6 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Input;
 
 class ApiHandlerServiceProvider extends ServiceProvider 
 {
@@ -21,7 +18,9 @@ class ApiHandlerServiceProvider extends ServiceProvider
 	 */
 	public function boot()
 	{
-		$this->package('marcelgwerder/laravel-api-handler', 'laravel-api-handler');
+		$this->mergeConfigFrom(
+			__DIR__.'/../config/apihandler.php', 'apihandler'
+		);
 	}
 
 	/**
@@ -33,14 +32,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
 	{
 		$this->app['ApiHandler'] = $this->app->share(function($app)
 		{
-			$apiHandler = new ApiHandler();
-
-			$apiHandler->setInputHandler(new Input);
-			$apiHandler->setResponseHandler(new Response);
-			$apiHandler->setConfigHandler($app['config']);
-			$apiHandler->setRequest(Request::instance());
-
-			return $apiHandler;
+			return new ApiHandler;
 		});
 	}
 }

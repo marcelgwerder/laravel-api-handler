@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	/*
 	|--------------------------------------------------------------------------
@@ -36,7 +36,7 @@ return array(
 	|
 	*/
 
-	'fulltext' => 'native', 
+	'fulltext' => 'default', 
 
 	/*
 	|--------------------------------------------------------------------------
@@ -60,17 +60,17 @@ return array(
 	|
 	*/
 
-	'errors' => array(
-		'ResourceNotFound' 				=> array('http_code' => 404, 'message' => 'The requested resource could not be found but may be available again in the future.'),
-		'InternalError' 				=> array('http_code' => 500, 'message' => 'Internal server error'),
-		'Unauthorized'    				=> array('http_code' => 401, 'message' => 'Authentication is required and has failed or has not yet been provided'),
-		'Forbidden'						=> array('http_code' => 403, 'message' => 'You don\'t have enough permissions to access this resource'),
-		'ToManyRequests'				=> array('http_code' => 429, 'message' => 'You have sent too many requests in a specific timespan'),
-		'InvalidInput' 					=> array('http_code' => 400, 'message' => 'The submited data is not valid'),
-		'InvalidQueryParameter' 		=> array('http_code' => 400, 'message' => 'Invalid parameter'),
-		'UnknownResourceField' 			=> array('http_code' => 400, 'message' => 'Unknown field ":field"'),
-		'UnknownResourceRelation' 		=> array('http_code' => 400, 'message' => 'Unknown relation ":relation"')
- 	),
+	'errors' => [
+		'ResourceNotFound' 				=> ['http_code' => 404, 'message' => 'The requested resource could not be found but may be available again in the future.'],
+		'InternalError' 				=> ['http_code' => 500, 'message' => 'Internal server error'],
+		'Unauthorized'    				=> ['http_code' => 401, 'message' => 'Authentication is required and has failed or has not yet been provided'],
+		'Forbidden'						=> ['http_code' => 403, 'message' => 'You don\'t have enough permissions to access this resource'],
+		'ToManyRequests'				=> ['http_code' => 429, 'message' => 'You have sent too many requests in a specific timespan'],
+		'InvalidInput' 					=> ['http_code' => 400, 'message' => 'The submited data is not valid'],
+		'InvalidQueryParameter' 		=> ['http_code' => 400, 'message' => 'Invalid parameter'],
+		'UnknownResourceField' 			=> ['http_code' => 400, 'message' => 'Unknown field ":field"'],
+		'UnknownResourceRelation' 		=> ['http_code' => 400, 'message' => 'Unknown relation ":relation"']
+ 	],
 
 	/*
 	|--------------------------------------------------------------------------
@@ -82,11 +82,11 @@ return array(
 	|
 	*/
 
-	'internal_errors' => array(
+	'internal_errors' => [
 		'UnknownResourceField' 	 => 'UnknownResourceField',
 		'UnknownResourceRelation'  => 'UnknownResourceRelation',
 		'UnsupportedQueryParameter'  => 'UnsupportedQueryParameter',
 		'InvalidQueryParameter' => 'InvalidQueryParameter'
-	)
+	]
 
 );

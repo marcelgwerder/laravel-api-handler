@@ -5,7 +5,7 @@ php:
   - "5.5"
 
 env:
-  - LARAVEL_VERSION="4.1.*"
+  - LARAVEL_VERSION="4.2.*"
   - LARAVEL_VERSION="dev-master"
 
 before_script:
