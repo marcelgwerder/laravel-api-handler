@@ -407,17 +407,8 @@ class Parser
 				$model = $relation->getModel();
 				$relationType = $this->getRelationType($relation);
 
-				//Preserve backwards compatibility
-				if(method_exists($relation , 'getQualifiedOtherKeyName') && method_exists($relation , 'getQualifiedForeignKey')) 
-				{
-					$primaryKey = $relation->getOtherKey();
-					$foreignKey = $relation->getQualifiedForeignKey();
-				} 
-				else 
-				{
-					$primaryKey = $model->getKeyName();
-					$foreignKey = $relation->getForeignKey();
-				}
+				$primaryKey = $model->getKeyName();
+				$foreignKey = $relation->getForeignKey();
 
 				//Switch keys according to the type of relationship
 				if($relationType == 'HasMany')
@@ -429,8 +420,8 @@ class Parser
 				{
 					$firstKey = $foreignKey;
 					$secondKey = $primaryKey;
-				} 
-		
+				}
+
 				//Check if we're on level 1 (e.g. a and not a.b)
 				if($previousHistoryPath == '')
 				{
