@@ -11,7 +11,7 @@ Install the package through composer by adding it to your `composer.json` file:
 
 ```
 "require": {
-    "marcelgwerder/laravel-api-handler": "dev-master"
+    "marcelgwerder/laravel-api-handler": "~0.5.1"
 }
 ```
 Then run `composer update`. Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
