@@ -1,5 +1,7 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
+use \Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use \Illuminate\Database\Eloquent\Relations\HasOne;
 use \Illuminate\Database\Eloquent\Relations\HasMany;
 use \Illuminate\Database\Eloquent\Relations\BelongsTo;
 use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -407,30 +409,38 @@ class Parser
 				$model = $relation->getModel();
 				$relationType = $this->getRelationType($relation);
 
-				$primaryKey = $model->getKeyName();
-				$foreignKey = $relation->getForeignKey();
+				if($relationType === 'HasManyThrough') 
+				{
+					$firstKey = $model->getKeyName();
+					$secondKey = null;
+				}
+				else 
+				{
+					$primaryKey = $model->getKeyName();
+					$foreignKey = $relation->getForeignKey();
+				}
 
 				//Switch keys according to the type of relationship
-				if($relationType == 'HasMany')
+				if($relationType === 'HasOne' || $relationType === 'HasMany' || $relationType === 'BelongsToMany')
 				{
 					$firstKey = $primaryKey;
 					$secondKey = $foreignKey;
 				}
-				else if($relationType == 'BelongsTo')
+				else if($relationType === 'BelongsTo')
 				{
 					$firstKey = $foreignKey;
 					$secondKey = $primaryKey;
-				}
+				} 
 
 				//Check if we're on level 1 (e.g. a and not a.b)
-				if($previousHistoryPath == '')
+				if($firstKey !== null && $previousHistoryPath == '')
 				{
 					if($fieldsCount > 0 && !in_array($primaryKey, $fields))
 					{
 						$fields[] = $firstKey;
 					}
 				}
-				else 
+				else if($firstKey !== null)
 				{
 					if(count($withHistory[$previousHistoryPath]['fields']) > 0 && !in_array($firstKey, $withHistory[$previousHistoryPath]['fields']))
 					{
@@ -438,7 +448,7 @@ class Parser
 					}
 				}
 
-				if(count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
+				if($secondKey !== null && count($withHistory[$currentHistoryPath]['fields']) > 0 && !in_array($secondKey, $withHistory[$currentHistoryPath]['fields']))
 				{
 					$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
 				}
@@ -464,7 +474,7 @@ class Parser
 				}, $withHistory[$withHistoryKey]['fields']);
 
 				if(count($fields) > 0 && is_array($fields))
-				{
+				{	
 					$query->select($fields);
 				}
 
@@ -713,6 +723,11 @@ class Parser
 	 */
 	protected function getRelationType($relation)
 	{
+		if($relation instanceof HasOne) 
+		{
+			return 'HasOne';
+		}
+
 		if($relation instanceof HasMany)
 		{
 			return 'HasMany';
@@ -726,6 +741,11 @@ class Parser
 		if($relation instanceof BelongsToMany)
 		{
 			return 'BelongsToMany';
+		}
+
+		if($relation instanceof HasManyThrough)
+		{
+			return 'HasManyThrough';
 		}
 	}
 
