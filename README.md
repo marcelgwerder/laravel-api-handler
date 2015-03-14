@@ -140,11 +140,23 @@ Or all the books except the ones with id 5 or 6:
 /api/books?id-not=5|6
 ```
 
+The same could be achieved using the `-in` suffix:
+```
+/api/books?id-in=5,6
+```
+Respectively the `not-in` suffix:
+```
+/api/books?id-not-in=5,6
+```
+
+
 #####Suffixes#####
 Suffix        | Operator      | Meaning
 ------------- | ------------- | -------------
 -lk           | LIKE          | Same as the SQL `LIKE` operator
 -not-lk       | NOT LIKE      | Same as the SQL `NOT LIKE` operator
+-in           | IN            | Same as the SQL `IN` operator
+-not-in       | NOT IN        | Same as the SQL `NOT IN` operator
 -min          | >=            | Greater than or equal to
 -max          | <=            | Smaller than or equal to
 -st           | <             | Smaller than

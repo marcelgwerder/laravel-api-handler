@@ -549,9 +549,11 @@ class Parser
 			'max' => '<=', 
 			'lk' => 'LIKE',
 			'not-lk' => 'NOT LIKE',
+			'in' => 'IN',
+			'not-in' => 'NOT IN',
 			'not' => '!=',
 		];
-		
+
 		$supportedPrefixesStr = implode('|', $supportedPostfixes);
 		$supportedPostfixesStr = implode('|', array_keys($supportedPostfixes));
 
@@ -576,35 +578,50 @@ class Parser
 
 			$column = $keyMatches[2];
 
-			$values = explode('|', $filterParamValue);
-
-			if(count($values) > 1)
+			if($comparator == 'IN') 
 			{
-				$this->query->where(function($query) use($column, $comparator, $values)
-				{
-					foreach($values as $value)
-					{
-						if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+				$values = explode(',', $filterParamValue);
 
-						//Link the filters with AND of there is a "not" and with OR if there's none
-						if($comparator == '!=' || $comparator == 'NOT LIKE')
-						{
-							$query->where($column, $comparator, $value);
-						}
-						else 
-						{
-							$query->orWhere($column, $comparator, $value);
-						}
-					}
-				});
+				$this->query->whereIn($column, $values);
+			}
+			else if($comparator == 'NOT IN') 
+			{
+				$values = explode(',', $filterParamValue);
+
+				$this->query->whereNotIn($column, $values);
 			}
 			else 
 			{
-				$value = $values[0];
+				$values = explode('|', $filterParamValue);
 
-				if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+				if(count($values) > 1)
+				{
+					$this->query->where(function($query) use($column, $comparator, $values)
+					{
+						foreach($values as $value)
+						{
+							if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
 
-				$this->query->where($column, $comparator, $value);
+							//Link the filters with AND of there is a "not" and with OR if there's none
+							if($comparator == '!=' || $comparator == 'NOT LIKE')
+							{
+								$query->where($column, $comparator, $value);
+							}
+							else 
+							{
+								$query->orWhere($column, $comparator, $value);
+							}
+						}
+					});
+				}
+				else 
+				{
+					$value = $values[0];
+
+					if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+
+					$this->query->where($column, $comparator, $value);
+				}
 			}
 		}
 	}

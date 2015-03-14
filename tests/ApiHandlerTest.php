@@ -29,6 +29,8 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 			'id-max'        => 6,
 			'id-gt'         => 7,
 			'id-st'         => 8,
+			'id-in'         => '1,2',
+			'id-not-in'     => '3,4',
 			//Pagination
 			'_limit'        => 5,
 			'_offset'       => 10,
@@ -183,6 +185,12 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
 		//assert for id-st
 		$this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '<', 'value' => 8, 'boolean' => 'and'], $wheres);
+
+		//assert for id-in
+		$this->assertContains(['type' => 'In', 'column' => 'id', 'values' => ['1', '2'], 'boolean' => 'and'], $wheres);
+
+		//assert for id-not-in
+		$this->assertContains(['type' => 'NotIn', 'column' => 'id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
 
 		//
 		// Limit
