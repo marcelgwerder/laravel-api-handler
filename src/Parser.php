@@ -569,11 +569,25 @@ class Parser
 
 			if(!isset($keyMatches[3]))
 			{
-				$comparator = '=';
+				if(strtolower(trim($filterParamValue)) == 'null')
+				{
+					$comparator = 'NULL';
+				}
+				else 
+				{
+					$comparator = '=';
+				}
 			}
 			else
 			{
-				$comparator = $supportedPostfixes[$keyMatches[3]];
+				if(strtolower(trim($filterParamValue)) == 'null')
+				{
+					$comparator = 'NOT NULL';
+				}
+				else
+				{
+					$comparator = $supportedPostfixes[$keyMatches[3]];
+				}
 			}
 
 			$column = $keyMatches[2];
@@ -618,9 +632,19 @@ class Parser
 				{
 					$value = $values[0];
 
-					if($comparator == 'LIKE' || $comparator == 'NOT LIKE') $value = preg_replace('/(^\*|\*$)/', '%', $value);
+					if($comparator == 'LIKE' || $comparator == 'NOT LIKE') 
+					{
+						$value = preg_replace('/(^\*|\*$)/', '%', $value);
+					}
 
-					$this->query->where($column, $comparator, $value);
+					if($comparator == 'NULL' || $comparator == 'NOT NULL')
+					{
+						$this->query->whereNull($column, 'and', $comparator == 'NOT NULL');
+					}
+					else 
+					{
+						$this->query->where($column, $comparator, $value);
+					}
 				}
 			}
 		}
