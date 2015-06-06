@@ -5,6 +5,8 @@ use \Illuminate\Database\Eloquent\Relations\HasOne;
 use \Illuminate\Database\Eloquent\Relations\HasMany;
 use \Illuminate\Database\Eloquent\Relations\BelongsTo;
 use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use \Illuminate\Database\Eloquent\Relations\MorphOne;
+use \Illuminate\Database\Eloquent\Relations\MorphMany;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \Illuminate\Support\Facades\Config;
@@ -432,6 +434,12 @@ class Parser
 					$secondKey = $primaryKey;
 				} 
 
+				if($relationType === 'MorphOne' || $relationType === 'MorphMany')
+				{
+					$firstKey = $primaryKey;
+					$secondKey = $foreignKey;
+				}
+
 				//Check if we're on level 1 (e.g. a and not a.b)
 				if($firstKey !== null && $previousHistoryPath == '')
 				{
@@ -787,6 +795,16 @@ class Parser
 		if($relation instanceof HasManyThrough)
 		{
 			return 'HasManyThrough';
+		}
+
+		if($relation instanceof MorphOne)
+		{
+			return 'MorphOne';
+		}
+
+		if($relation instanceof MorphMany)
+		{
+			return 'MorphMany';
 		}
 	}
 
