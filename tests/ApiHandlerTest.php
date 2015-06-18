@@ -95,6 +95,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 		$processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
 		$connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
 		$connection->shouldReceive('select')->once()->with('select * from `posts`', [])->andReturn($this->data);
+		$connection->shouldReceive('select')->once()->with('select * from `posts`', [], true)->andReturn($this->data);
 		$connection->shouldReceive('raw')->once()->with('MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
 				   ->andReturn($this->fulltextSelectExpression);
 		$connection->shouldReceive('getPdo')->once()->andReturn($pdo);
@@ -224,7 +225,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 		$this->assertArrayHasKey('comments.user', $eagerLoads);
 
 		//Check if auto fields are set on the base query
-		$this->assertContains('id', $columns);
+		$this->assertContains('posts.id', $columns);
 
 		//Check if fields are set on the "comments" relation query 
 		$query = $post->newQuery(); 

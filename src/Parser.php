@@ -5,6 +5,8 @@ use \Illuminate\Database\Eloquent\Relations\HasOne;
 use \Illuminate\Database\Eloquent\Relations\HasMany;
 use \Illuminate\Database\Eloquent\Relations\BelongsTo;
 use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use \Illuminate\Database\Eloquent\Relations\MorphOne;
+use \Illuminate\Database\Eloquent\Relations\MorphMany;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \Illuminate\Support\Facades\Config;
@@ -406,36 +408,36 @@ class Parser
 				}
 
 				$relation = call_user_func([$previousModel, $part]);
-				$model = $relation->getModel();
 				$relationType = $this->getRelationType($relation);
 
-				if($relationType === 'HasManyThrough') 
+				if($relationType === 'BelongsTo') 
 				{
-					$firstKey = $model->getKeyName();
+					$firstKey = $relation->getQualifiedForeignKey();
+					$secondKey = $relation->getQualifiedParentKeyName();
+				} 
+				else if($relationType === 'HasMany' || $relationType === 'HasOne') 
+				{
+					$firstKey = $relation->getQualifiedParentKeyName();
+					$secondKey = $relation->getForeignKey();
+				} 
+				else if($relationType === 'BelongsToMany') 
+				{
+					$firstKey = $relation->getQualifiedParentKeyName();
+					$secondKey = $relation->getRelated()->getQualifiedKeyName();
+				} 
+				else if($relationType === 'HasManyThrough') 
+				{
+					$firstKey = $relation->getHasCompareKey();
 					$secondKey = null;
 				}
-				else 
-				{
-					$primaryKey = $model->getKeyName();
-					$foreignKey = $relation->getForeignKey();
+				else {
+					die('Relation type not supported!');
 				}
-
-				//Switch keys according to the type of relationship
-				if($relationType === 'HasOne' || $relationType === 'HasMany' || $relationType === 'BelongsToMany')
-				{
-					$firstKey = $primaryKey;
-					$secondKey = $foreignKey;
-				}
-				else if($relationType === 'BelongsTo')
-				{
-					$firstKey = $foreignKey;
-					$secondKey = $primaryKey;
-				} 
 
 				//Check if we're on level 1 (e.g. a and not a.b)
 				if($firstKey !== null && $previousHistoryPath == '')
 				{
-					if($fieldsCount > 0 && !in_array($primaryKey, $fields))
+					if($fieldsCount > 0 && !in_array($firstKey, $fields))
 					{
 						$fields[] = $firstKey;
 					}
@@ -453,7 +455,7 @@ class Parser
 					$withHistory[$currentHistoryPath]['fields'][] = $secondKey;
 				}
 
-				$previousModel = $model;
+				$previousModel = $relation->getModel();
 			}
 
 			unset($previousModel);
@@ -787,6 +789,16 @@ class Parser
 		if($relation instanceof HasManyThrough)
 		{
 			return 'HasManyThrough';
+		}
+
+		if($relation instanceof MorphOne)
+		{
+			return 'MorphOne';
+		}
+
+		if($relation instanceof MorphMany)
+		{
+			return 'MorphMany';
 		}
 	}
 
