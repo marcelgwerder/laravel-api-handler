@@ -1,29 +1,29 @@
 {
-	"name": "marcelgwerder/laravel-api-handler",
-	"description": "Package providing helper functions for a Laravel REST-API ",
-	"keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
-	"homepage": "http://github.com/marcelgwerder/laravel-api-handler",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Marcel Gwerder",
-			"email": "info@marcelgwerder.ch"
-		}
-	],
-	"require": {
-		"php": ">=5.4.0",
-		"illuminate/support": "~5.0",
-		"illuminate/database": "~5.0",
-		"illuminate/http": "~5.0"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "~4.5",
-		"mockery/mockery": "~0.9"
-	},
-	"autoload": {
-		"psr-4": {
-			"Marcelgwerder\\ApiHandler\\": "src"
-		}
-	},
-	"minimum-stability": "stable"
+    "name": "marcelgwerder/laravel-api-handler",
+    "description": "Package providing helper functions for a Laravel REST-API ",
+    "keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
+    "homepage": "http://github.com/marcelgwerder/laravel-api-handler",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marcel Gwerder",
+            "email": "info@marcelgwerder.ch"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "~5.0",
+        "illuminate/database": "~5.0",
+        "illuminate/http": "~5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.5",
+        "mockery/mockery": "~0.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Marcelgwerder\\ApiHandler\\": "src"
+        }
+    },
+    "minimum-stability": "stable"
 }
