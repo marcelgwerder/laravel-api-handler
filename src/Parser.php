@@ -59,6 +59,13 @@ class Parser
     public $envelope;
 
     /**
+     * Maximum limit for response
+     *
+     * @var int
+     */
+    public $maxLimit;
+
+    /**
      * The base query builder instance.
      *
      * @var \Illuminate\Database\Query\Builder
@@ -132,6 +139,7 @@ class Parser
 
         $this->prefix = Config::get('apihandler.prefix');
         $this->envelope = Config::get('apihandler.envelope');
+        $this->maxLimit = Config::get('apihandler.max_limit');
 
         $isEloquentModel = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Model');
         $isEloquentRelation = is_subclass_of($builder, '\Illuminate\Database\Eloquent\Relations\Relation');
@@ -186,7 +194,17 @@ class Parser
             //Parse and apply limit using the laravel "limit" function
             if ($limit = $this->getParam('limit')) {
                 $limit = intval($limit);
-                $this->query->limit($limit);
+
+                if($limit <= $this->maxLimit) {
+                    $this->query->limit($limit);
+                }
+                elseif($limit === null) {
+                    $this->query->limit($limit);
+                }
+                else {
+                    $limit = intval($this->maxLimit);
+                    $this->query->limit($limit);
+                }
             }
 
             //Parse and apply the filters using the different laravel "where" functions

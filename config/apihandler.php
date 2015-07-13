@@ -16,6 +16,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Max Limit for query
+    |--------------------------------------------------------------------------
+    |
+    | Defines the max limit of resutls that can be obtained, if null is defined
+    | results are limited as that of "limit" query parameter
+    |
+     */
+
+    'max_limit' => null,
+    
+    /*
+    |--------------------------------------------------------------------------
     | Envelope
     |--------------------------------------------------------------------------
     |
@@ -62,7 +74,7 @@ return [
 
     'errors' => [
         'ResourceNotFound' => ['http_code' => 404, 'message' => 'The requested resource could not be found but may be available again in the future.'],
-        'InternalError' => 	['http_code' => 500, 'message' => 'Internal server error'],
+        'InternalError' =>  ['http_code' => 500, 'message' => 'Internal server error'],
         'Unauthorized' => ['http_code' => 401, 'message' => 'Authentication is required and has failed or has not yet been provided'],
         'Forbidden' => ['http_code' => 403, 'message' => 'You don\'t have enough permissions to access this resource'],
         'ToManyRequests' => ['http_code' => 429, 'message' => 'You have sent too many requests in a specific timespan'],
