@@ -198,7 +198,7 @@ class Parser
                 if($limit <= $this->maxLimit) {
                     $this->query->limit($limit);
                 }
-                elseif($limit === null) {
+                elseif($this->maxLimit === null) {
                     $this->query->limit($limit);
                 }
                 else {
