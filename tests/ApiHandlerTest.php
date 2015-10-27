@@ -2,6 +2,7 @@
 use Mockery as m;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Query\Expression;
+use \Illuminate\Database\Query\JoinClause;
 use \Illuminate\Http\JsonResponse;
 use \Illuminate\Support\Facades\Config;
 use \Illuminate\Support\Facades\Input;
@@ -23,6 +24,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             'title' => 'Example Title',
             'title-not-lk' => 'Example Title',
             'title-not' => 'Example Title|Another Title',
+            'comments->title-lk' => 'This comment',
             'id-min' => 5,
             'id-max' => 6,
             'id-gt' => 7,
@@ -184,10 +186,15 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //assert for id-not-in
         $this->assertContains(['type' => 'NotIn', 'column' => 'id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
 
+        //assert for relation (user->first_name like)
+        $this->assertContains(['type' => 'Basic', 'column' => 'comments.title', 'operator' => 'LIKE', 'value' => 'This comment', 'boolean' => 'and'], $wheres);
+
+        $join = new JoinClause('inner', 'comments');
+        $join -> on('posts.id','=','comments.customfk_post_id');
+        $this -> assertEquals($join, $queryBuilder -> joins[0]);
         //
         // Limit
         //
-
         $limit = $queryBuilder->limit;
         $this->assertEquals($this->params['_limit'], $limit);
 

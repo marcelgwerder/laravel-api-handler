@@ -521,6 +521,40 @@ class Parser
 
             $column = $keyMatches[2];
 
+            //resolve a relation->relation_column if we are using an eloquent builder.
+            if( strpos($column, '->') !== false && $this -> isEloquentBuilder ){
+                $model = $this -> builder -> getModel();
+                //get the relation and the column in the relation
+                $relationComponents = explode('->', $column);
+                if( !method_exists( $model, $relationComponents[0])){
+                    throw new ApiHandlerException('UnknownResourceRelation', ['relation' => $relationComponents[0]]);
+                }
+                $relation = call_user_func([$model, $relationComponents[0]]);
+                $relationColumn = $relationComponents[1];
+
+                $relationType = $this->getRelationType($relation);
+
+
+                if ($relationType === 'BelongsTo') {
+                    $firstKey = $relation->getQualifiedForeignKey();
+                    $secondKey = $relation->getQualifiedOtherKeyName();
+                } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
+                    $firstKey = $relation->getQualifiedParentKeyName();
+                    $secondKey = $relation->getForeignKey();
+                } else if ($relationType === 'BelongsToMany') {
+                    $firstKey = $relation->getQualifiedParentKeyName();
+                    $secondKey = $relation->getRelated()->getQualifiedKeyName();
+                }
+
+                //get the table to join to
+                $joinTable = $relation -> getRelated() -> getTable();
+                //do the join
+                $this -> query -> join($joinTable, $firstKey ,'=', $secondKey);
+                //modify the $column name and continue parsing.
+                $column = $joinTable.'.'.$relationColumn;
+
+            }
+
             if ($comparator == 'IN') {
                 $values = explode(',', $filterParamValue);
 
