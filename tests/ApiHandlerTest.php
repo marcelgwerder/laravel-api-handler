@@ -152,39 +152,39 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
                 if ($subWheres[0]['boolean'] == 'and') {
                     //assert for title-not
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => '!=', 'value' => 'Example Title', 'boolean' => 'and'], $subWheres[0]);
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => '!=', 'value' => 'Another Title', 'boolean' => 'and'], $subWheres[1]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '!=', 'value' => 'Example Title', 'boolean' => 'and'], $subWheres[0]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '!=', 'value' => 'Another Title', 'boolean' => 'and'], $subWheres[1]);
                 } else {
                     //assert for title-lk
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => 'Example Title', 'boolean' => 'or'], $subWheres[0]);
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => 'Another Title', 'boolean' => 'or'], $subWheres[1]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Example Title', 'boolean' => 'or'], $subWheres[0]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Another Title', 'boolean' => 'or'], $subWheres[1]);
                 }
 
             }
         }
 
         //assert for title
-        $this->assertContains(['type' => 'Basic', 'column' => 'title', 'operator' => '=', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '=', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
         //assert for title-not-lk
-        $this->assertContains(['type' => 'Basic', 'column' => 'title', 'operator' => 'NOT LIKE', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'NOT LIKE', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
 
         //assert for id-min
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '>=', 'value' => 5, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '>=', 'value' => 5, 'boolean' => 'and'], $wheres);
 
         //assert for id-max
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '<=', 'value' => 6, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '<=', 'value' => 6, 'boolean' => 'and'], $wheres);
 
         //assert for id-gt
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '>', 'value' => 7, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '>', 'value' => 7, 'boolean' => 'and'], $wheres);
 
         //assert for id-st
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '<', 'value' => 8, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '<', 'value' => 8, 'boolean' => 'and'], $wheres);
 
         //assert for id-in
-        $this->assertContains(['type' => 'In', 'column' => 'id', 'values' => ['1', '2'], 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'In', 'column' => 'posts.id', 'values' => ['1', '2'], 'boolean' => 'and'], $wheres);
 
         //assert for id-not-in
-        $this->assertContains(['type' => 'NotIn', 'column' => 'id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'NotIn', 'column' => 'posts.id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
 
         //assert for relation (user->first_name like)
         $this->assertContains(['type' => 'Basic', 'column' => 'comments.title', 'operator' => 'LIKE', 'value' => 'This comment', 'boolean' => 'and'], $wheres);
