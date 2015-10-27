@@ -554,6 +554,12 @@ class Parser
                 $column = $joinTable.'.'.$relationColumn;
 
             }
+            //should we be using an eloquent builder, append the table name to every column to differentiate from joined columns.
+            if( $this -> isEloquentBuilder ){
+                if( strpos( $column, '.') === false ){
+                    $column = $this -> builder -> getModel() -> getTable().'.'.$column;
+                }
+            }
 
             if ($comparator == 'IN') {
                 $values = explode(',', $filterParamValue);
