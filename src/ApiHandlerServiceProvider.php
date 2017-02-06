@@ -30,7 +30,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app['ApiHandler'] = $this->app->share(function ($app) {
+        $this->app['ApiHandler'] = $this->app->singleton('Marcelgwerder\ApiHandler', function ($app) {
             return new ApiHandler;
         });
     }
