@@ -16,6 +16,9 @@ class CountMetaProvider extends MetaProvider
 
         //Remove offset from builder because a count doesn't work in combination with an offset
         $this->builder->offset = null;
+
+        //Remove orders from builder because they are irrelevant for counts and can cause errors with renamed columns
+        $this->builder->orders = null;
     }
 
     /**
