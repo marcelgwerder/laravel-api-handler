@@ -40,7 +40,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             '_config' => 'mode-default,meta-filter-count,meta-total-count',
         ];
 
-        $this->fulltextSelectExpression = new Expression('MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`');
+        $this->fulltextSelectExpression = new Expression('MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`');
 
         //Test data
         $this->data = [
@@ -92,7 +92,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
         $connection->shouldReceive('select')->once()->with('select * from `posts`', [])->andReturn($this->data);
         $connection->shouldReceive('select')->once()->with('select * from `posts`', [], true)->andReturn($this->data);
-        $connection->shouldReceive('raw')->once()->with('MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
+        $connection->shouldReceive('raw')->once()->with('MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
                    ->andReturn($this->fulltextSelectExpression);
         $connection->shouldReceive('getPdo')->once()->andReturn($pdo);
 
@@ -150,39 +150,39 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
                 if ($subWheres[0]['boolean'] == 'and') {
                     //assert for title-not
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => '!=', 'value' => 'Example Title', 'boolean' => 'and'], $subWheres[0]);
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => '!=', 'value' => 'Another Title', 'boolean' => 'and'], $subWheres[1]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '!=', 'value' => 'Example Title', 'boolean' => 'and'], $subWheres[0]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '!=', 'value' => 'Another Title', 'boolean' => 'and'], $subWheres[1]);
                 } else {
                     //assert for title-lk
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => 'Example Title', 'boolean' => 'or'], $subWheres[0]);
-                    $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => 'Another Title', 'boolean' => 'or'], $subWheres[1]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Example Title', 'boolean' => 'or'], $subWheres[0]);
+                    $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Another Title', 'boolean' => 'or'], $subWheres[1]);
                 }
 
             }
         }
 
         //assert for title
-        $this->assertContains(['type' => 'Basic', 'column' => 'title', 'operator' => '=', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '=', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
         //assert for title-not-lk
-        $this->assertContains(['type' => 'Basic', 'column' => 'title', 'operator' => 'NOT LIKE', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'NOT LIKE', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
 
         //assert for id-min
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '>=', 'value' => 5, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '>=', 'value' => 5, 'boolean' => 'and'], $wheres);
 
         //assert for id-max
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '<=', 'value' => 6, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '<=', 'value' => 6, 'boolean' => 'and'], $wheres);
 
         //assert for id-gt
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '>', 'value' => 7, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '>', 'value' => 7, 'boolean' => 'and'], $wheres);
 
         //assert for id-st
-        $this->assertContains(['type' => 'Basic', 'column' => 'id', 'operator' => '<', 'value' => 8, 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '<', 'value' => 8, 'boolean' => 'and'], $wheres);
 
         //assert for id-in
-        $this->assertContains(['type' => 'In', 'column' => 'id', 'values' => ['1', '2'], 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'In', 'column' => 'posts.id', 'values' => ['1', '2'], 'boolean' => 'and'], $wheres);
 
         //assert for id-not-in
-        $this->assertContains(['type' => 'NotIn', 'column' => 'id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
+        $this->assertContains(['type' => 'NotIn', 'column' => 'posts.id', 'values' => ['3', '4'], 'boolean' => 'and'], $wheres);
 
         //
         // Limit
@@ -203,8 +203,8 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //
 
         $orders = $queryBuilder->orders;
-        $this->assertContains(['column' => 'title', 'direction' => 'desc'], $orders);
-        $this->assertContains(['column' => 'first_name', 'direction' => 'asc'], $orders);
+        $this->assertContains(['column' => 'posts.title', 'direction' => 'desc'], $orders);
+        $this->assertContains(['column' => 'posts.first_name', 'direction' => 'asc'], $orders);
 
         //
         //With
@@ -239,7 +239,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $query = $post->newQuery();
         call_user_func($eagerLoads['comments'], $query);
         $orders = $query->getQuery()->orders;
-        $this->assertContains(['column' => 'created_at', 'direction' => 'asc'], $orders);
+        $this->assertContains(['column' => 'comments.created_at', 'direction' => 'asc'], $orders);
 
         //
         // Fulltext search
@@ -256,12 +256,12 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
                 $query = $where['query'];
                 $subWheres = $query->wheres;
 
-                $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'], $subWheres[0]);
-                $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'], $subWheres[1]);
-                $this->assertEquals(['type' => 'Basic', 'column' => 'title', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'], $subWheres[2]);
-                $this->assertEquals(['type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'], $subWheres[3]);
-                $this->assertEquals(['type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'], $subWheres[4]);
-                $this->assertEquals(['type' => 'Basic', 'column' => 'description', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'], $subWheres[5]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'], $subWheres[0]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'], $subWheres[1]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'], $subWheres[2]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.description', 'operator' => 'LIKE', 'value' => '%Something%', 'boolean' => 'or'], $subWheres[3]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.description', 'operator' => 'LIKE', 'value' => '%to%', 'boolean' => 'or'], $subWheres[4]);
+                $this->assertEquals(['type' => 'Basic', 'column' => 'posts.description', 'operator' => 'LIKE', 'value' => '%search%', 'boolean' => 'or'], $subWheres[5]);
             }
         }
 
@@ -270,7 +270,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
         //Test the where
         $wheres = $queryBuilder->wheres;
-        $this->assertEquals(['type' => 'raw', 'sql' => 'MATCH(title,description) AGAINST("Something to search" IN BOOLEAN MODE)', 'boolean' => 'and'], $wheres[0]);
+        $this->assertEquals(['type' => 'raw', 'sql' => 'MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE)', 'boolean' => 'and'], $wheres[0]);
 
         //Test the select
         $columns = $queryBuilder->columns;

@@ -175,7 +175,7 @@ class Parser
         $this->multiple = $multiple;
 
         if ($multiple) {
-            $fullTextSearchColumns = $options;
+            $fullTextSearchColumns = array_map([$this, 'getQualifiedColumnName'], $options);
 
             //Parse and apply offset using the laravel "offset" function
             if ($offset = $this->getParam('offset')) {
@@ -257,8 +257,8 @@ class Parser
      */
     protected function getParam($param)
     {
-        if (isset($this->params[$this->prefix . $param])) {
-            return $this->params[$this->prefix . $param];
+        if (isset($this->params[$this->prefix.$param])) {
+            return $this->params[$this->prefix.$param];
         }
 
         return false;
@@ -275,7 +275,7 @@ class Parser
         $prefix = $this->prefix;
 
         $filterParams = array_diff_ukey($this->params, $reserved, function ($a, $b) use ($prefix) {
-            return $a != $prefix . $b;
+            return $a != $prefix.$b;
         });
 
         if (count($filterParams) > 0) {
@@ -340,7 +340,7 @@ class Parser
                 $previousHistoryPath = implode('.', array_splice($partsCopy, 0, $i));
 
                 //Get the current history part based on the previous one
-                $currentHistoryPath = $previousHistoryPath ? $previousHistoryPath . '.' . $part : $part;
+                $currentHistoryPath = $previousHistoryPath ? $previousHistoryPath.'.'.$part : $part;
 
                 //Create new history element
                 if (!isset($withHistory[$currentHistoryPath])) {
@@ -349,12 +349,12 @@ class Parser
 
                 //Get all given fields related to the current part
                 $withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function ($field) use ($part) {
-                    return preg_match('/' . $part . '\..+$/', $field);
+                    return preg_match('/'.$part.'\..+$/', $field);
                 });
 
                 //Get all given sorts related to the current part
                 $withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function ($pair) use ($part) {
-                    return preg_match('/' . $part . '\..+$/', $pair[0]);
+                    return preg_match('/'.$part.'\..+$/', $pair[0]);
                 });
 
                 if (!isset($previousModel)) {
@@ -435,9 +435,6 @@ class Parser
 
                 //Attach sorts
                 foreach ($withHistory[$withHistoryKey]['sorts'] as $pair) {
-                    $pos = strpos($pair[0], '.');
-                    $pair = $pos !== false ? [substr($pair[0], $pos + 1), $pair[1]] : $pair;
-
                     call_user_func_array([$query, 'orderBy'], $pair);
                 }
             };
@@ -472,7 +469,8 @@ class Parser
                 $direction = 'asc';
             }
 
-            $pair = [preg_replace('/^-/', '', $sortElem), $direction];
+            $column = $this->getQualifiedColumnName(preg_replace('/^-/', '', $sortElem));
+            $pair = [$column, $direction];
 
             //Only add the sorts that are on the base resource
             if (strpos($sortElem, '.') === false) {
@@ -511,7 +509,7 @@ class Parser
 
             //Matches every parameter with an optional prefix and/or postfix
             //e.g. not-title-lk, title-lk, not-title, title
-            $keyRegex = '/^(?:(' . $supportedPrefixesStr . ')-)?(.*?)(?:-(' . $supportedPostfixesStr . ')|$)/';
+            $keyRegex = '/^(?:('.$supportedPrefixesStr.')-)?(.*?)(?:-('.$supportedPostfixesStr.')|$)/';
 
             preg_match($keyRegex, $filterParamKey, $keyMatches);
 
@@ -529,7 +527,7 @@ class Parser
                 }
             }
 
-            $column = $keyMatches[2];
+            $column = $this->getQualifiedColumnName($keyMatches[2]);
 
             if ($comparator == 'IN') {
                 $values = explode(',', $filterParamValue);
@@ -598,7 +596,7 @@ class Parser
             $qParam = $this->query->getConnection()->getPdo()->quote($qParam);
 
             //Use native fulltext search
-            $this->query->whereRaw('MATCH(' . implode(',', $fullTextSearchColumns) . ') AGAINST("' . $qParam . '" IN BOOLEAN MODE)');
+            $this->query->whereRaw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE)');
 
             //Add the * to the selects because of the score column
             if (count($this->query->columns) == 0) {
@@ -607,7 +605,7 @@ class Parser
 
             //Add the score column
             $scoreColumn = Config::get('apihandler.fulltext_score_column');
-            $this->query->addSelect($this->query->raw('MATCH(' . implode(',', $fullTextSearchColumns) . ') AGAINST("' . $qParam . '" IN BOOLEAN MODE) as `' . $scoreColumn . '`'));
+            $this->query->addSelect($this->query->raw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE) as `'.$scoreColumn.'`'));
         } else {
             $keywords = explode(' ', $qParam);
 
@@ -615,7 +613,7 @@ class Parser
             $this->query->where(function ($query) use ($fullTextSearchColumns, $keywords) {
                 foreach ($fullTextSearchColumns as $column) {
                     foreach ($keywords as $keyword) {
-                        $query->orWhere($column, 'LIKE', '%' . $keyword . '%');
+                        $query->orWhere($column, 'LIKE', '%'.$keyword.'%');
                     }
                 }
             });
@@ -717,6 +715,21 @@ class Parser
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Get the qualified column name
+     *
+     * @param  string $column
+     * @return string
+     */
+    protected function getQualifiedColumnName($column, $table = null)
+    {
+        if (strpos($column, '.') === false) {
+            return $table ?: $this->query->from.'.'.$column;
+        } else {
+            return $column;
         }
     }
 }
