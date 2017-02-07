@@ -375,12 +375,22 @@ class Parser
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
-                    $secondKey = $relation->getForeignKey();
+                    if (method_exists($relation, 'getQualifiedForeignKeyName')) {
+                        $secondKey = $relation->getQualifiedForeignKeyName();
+                    } else {
+                        // compatibility for laravel < 5.4
+                        $secondKey = $relation->getForeignKey();
+                    }
                 } else if ($relationType === 'BelongsToMany') {
                     $firstKey = $relation->getQualifiedParentKeyName();
                     $secondKey = $relation->getRelated()->getQualifiedKeyName();
                 } else if ($relationType === 'HasManyThrough') {
-                    $firstKey = $relation->getHasCompareKey();
+                    if (method_exists($relation, 'getExistenceCompareKey')) {
+                        $firstKey = $relation->getExistenceCompareKey();
+                    } else {
+                        // compatibility for laravel < 5.4
+                        $firstKey = $relation->getHasCompareKey();
+                    }
                     $secondKey = null;
                 } else {
                     die('Relation type not supported!');
