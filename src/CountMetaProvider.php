@@ -1,5 +1,7 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
+use Illuminate\Support\Facades\DB;
+
 class CountMetaProvider extends MetaProvider
 {
     /**
@@ -28,6 +30,17 @@ class CountMetaProvider extends MetaProvider
      */
     public function get()
     {
+        if (!empty($this->builder->groups)) {
+            //Only a count column is required
+            $this->builder->columns = [];
+            $this->builder->selectRaw('count(*) as aggregate');
+            $this->builder->limit = null;
+
+            //Use the original builder as a subquery and count over it because counts over groups return the number of rows for each group, not for the total results
+            $query = DB::query()->selectRaw('count(*) as aggregate from (' . $this->builder->toSql() . ') as count_table', $this->builder->getBindings());
+            return intval($query->first()->aggregate);
+        }
+
         return intval($this->builder->count());
     }
 }
