@@ -242,7 +242,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertContains(['column' => 'comments.created_at', 'direction' => 'asc'], $orders);
 
         //
-        // Fulltext search
+        // Default fulltext search
         //
 
         $builder = $this->apiHandler->parseMultiple($post, ['title', 'description'], ['_q' => 'Something to search'])->getBuilder();
@@ -265,8 +265,16 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $builder = $this->apiHandler->parseMultiple($post, ['title', 'description'], ['_q' => 'Something to search'])->getBuilder();
+        //
+        // Native fulltext search
+        //
+
+        $builder = $this->apiHandler->parseMultiple($post, ['title', 'description'], ['_q' => 'Something to search', '_sort' => '_score'])->getBuilder();
         $queryBuilder = $builder->getQuery();
+
+        //Test alias column in sort
+        $orders = $queryBuilder->orders;
+        $this->assertContains(['column' => '_score', 'direction' => 'asc'], $orders);
 
         //Test the where
         $wheres = $queryBuilder->wheres;
