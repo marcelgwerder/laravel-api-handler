@@ -728,9 +728,9 @@ class Parser
     {
         //Check whether there is a matching column expression that contains an 
         //alias and should therefore not be turned into a qualified column name.
-        $isAlias = !empty(array_filter($this->query->columns ?: [], function($column) {
+        $isAlias = count(array_filter($this->query->columns ?: [], function($column) {
             return stripos($column, ' as ') !== false;
-        }));
+        })) > 0;
 
         if (strpos($column, '.') === false && !$isAlias) {
             return $table ?: $this->query->from.'.'.$column;
