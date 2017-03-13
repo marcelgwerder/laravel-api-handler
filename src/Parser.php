@@ -203,12 +203,18 @@ class Parser
         } else {
             $identification = $options;
 
-            if (is_numeric($identification)) {
-                $this->query->where('id', $identification);
-            } else if (is_array($identification)) {
+            if (is_array($identification)) {
                 foreach ($identification as $column => $value) {
                     $this->query->where($column, $value);
                 }
+            } else {
+                if($this->isEloquentBuilder) {
+                    $primaryKey = $this->builder->getModel()->getQualifiedKeyName();
+                } else {
+                    $primaryKey = $this->getQualifiedColumnName('id');
+                }
+                
+                $this->query->where($primaryKey, $identification);
             }
         }
 
