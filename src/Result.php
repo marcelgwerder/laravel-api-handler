@@ -178,8 +178,8 @@ class Result
         // get the relations which already exists on the model (e.g. with $builder->with())
         $allowedRelations = $this->getRelationsRecursively($model);
 
-        // parse the model to an array and get the relations, which got added unintentionally
-        // (e.g. when accessing a relation in an accessor method)
+        // parse the model to an array and get the relations which got added unintentionally
+        // (e.g. when accessing a relation in an accessor method or somewhere else)
         $response = $model->toArray();
         $loadedRelations = $this->getRelationsRecursively($model);
 

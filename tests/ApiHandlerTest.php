@@ -65,6 +65,8 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
                ->with('apihandler.fulltext')->andReturn('native');
         $config->shouldReceive('get')->once()
                ->with('apihandler.fulltext_score_column')->andReturn('_score');
+        $config->shouldReceive('get')->once()
+               ->with('apihandler.cleanup_relations', false)->andReturn(false);
         Config::swap($config);
 
         $app->shouldReceive('make')->once()->andReturn($config);
