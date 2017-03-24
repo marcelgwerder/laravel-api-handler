@@ -3,6 +3,7 @@
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Response;
+use \Illuminate\Support\Facades\Config;
 
 class Result
 {
@@ -56,9 +57,17 @@ class Result
     public function getResult()
     {
         if ($this->parser->multiple) {
-            $result = $this->cleanupRelationsOnModels($this->parser->builder->get());
+            $result = $this->parser->builder->get();
+
+            if (Config::get('apihandler.cleanup_relations', false)) {
+                $result = $this->cleanupRelationsOnModels($result);
+            }
         } else {
-            $result = $this->cleanupRelations($this->parser->builder->first());
+            $result = $this->parser->builder->first();
+
+            if (Config::get('apihandler.cleanup_relations', false)) {
+                $result = $this->cleanupRelations($result);
+            }
         }
 
         return $result;

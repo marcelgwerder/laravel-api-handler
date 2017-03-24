@@ -52,6 +52,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cleanup Relations in the Response
+    |--------------------------------------------------------------------------
+    |
+    | By default, the API Handler returns all loaded relations of the models,
+    | even if they are not in the '_with' param or explicitly loaded with
+    | $builder->with(). These unexpected relations can come from custom
+    | accessor methods or when you access a relation in your code in general.
+    |
+    | If you want these to get removed from the response, set this value
+    | to true so only the ones in the '_with' param or explicitly added with
+    | $builder->with('relation') get returned.
+    |
+     */
+
+    'cleanup_relations' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Errors
     |--------------------------------------------------------------------------
     |
