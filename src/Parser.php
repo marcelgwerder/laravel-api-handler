@@ -728,14 +728,15 @@ class Parser
      * Get the qualified column name
      *
      * @param  string $column
+     * @param  null   $table
      * @return string
      */
     protected function getQualifiedColumnName($column, $table = null)
     {
         //Check whether there is a matching column expression that contains an 
         //alias and should therefore not be turned into a qualified column name.
-        $isAlias = count(array_filter($this->query->columns ?: [], function($column) {
-            return stripos($column, ' as ') !== false;
+        $isAlias = count(array_filter($this->query->columns ?: [], function($queryColumn) use ($column) {
+            return preg_match('/.*[\s\'"`]as\s*[\s\'"`]' . $column . '[\'"`]?$/', trim($queryColumn));
         })) > 0;
 
         if (strpos($column, '.') === false && !$isAlias) {
