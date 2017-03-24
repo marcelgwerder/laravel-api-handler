@@ -74,6 +74,26 @@ class Result
     }
 
     /**
+     * Return the query builder including the result or fail if it could not be found
+     *
+     * @return Illuminate\Database\Query\Builder $result
+     */
+    public function getResultOrFail()
+    {
+        if ($this->parser->multiple) {
+            return $this->getResult();
+        }
+
+        $result = $this->parser->builder->firstOrFail();
+
+        if (Config::get('apihandler.cleanup_relations', false)) {
+            $result = $this->cleanupRelations($result);
+        }
+
+        return $result;
+    }
+
+    /**
      * Get the query bulder object
      *
      * @return Illuminate\Database\Query\Builder
