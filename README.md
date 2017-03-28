@@ -119,8 +119,11 @@ Returns an array of prepared headers.
 **getMetaProviders():**
 Returns an array of meta provider objects. Each of these objects provide a specific type of meta data through its `get()` method.
 
-**cleanup($cleanup) => $this:**
-If true, the resulting array will get cleaned up from unintentionally added relations. Defaults to the config `apihandler.cleanup_relations` which defaults to `false`.
+**cleanup($cleanup):**
+If true, the resulting array will get cleaned up from unintentionally added relations. Such relations can get automatically added if they are accessed as properties in model accessors. The global default for the cleanup can be defined using the config option `cleanup_relations` which defaults to `false`.
+```php
+ApiHandler::parseSingle($books, 42)->cleanup(true)->getResponse();
+```
 
 #### Filtering
 Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
