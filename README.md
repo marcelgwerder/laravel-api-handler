@@ -1,9 +1,9 @@
-##Laravel API Handler
+## Laravel API Handler
 [![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler) [![Latest Stable Version](https://poser.pugx.org/marcelgwerder/laravel-api-handler/v/stable.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![Total Downloads](https://poser.pugx.org/marcelgwerder/laravel-api-handler/downloads.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![License](https://poser.pugx.org/marcelgwerder/laravel-api-handler/license.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler)
 
 This helper package provides functionality for parsing the URL of a REST-API request.
 
-###Installation
+### Installation
 
 ***Note:*** This version is for Laravel 5. When using Laravel 4 you need to use version 0.4.x.
 
@@ -28,9 +28,9 @@ Or set an alias in `app.php`:
 ```
 That's it!
 
-###Migrate from 0.3.x to >= 0.4.x
+### Migrate from 0.3.x to >= 0.4.x
 
-####Relation annotations
+#### Relation annotations
 
 Relation methods now need an `@Relation` annotation to prove that they are relation methods and not any other methods (see issue #11).
 
@@ -42,7 +42,7 @@ public function author() {
     return $this->belongsTo('Author');  
 }
 ```
-####Custom identification columns
+#### Custom identification columns
 
 If you pass an array as the second parameter to `parseSingle`, there now have to be column/value pairs.
 This allows us to pass multiple conditions like:
@@ -51,13 +51,13 @@ This allows us to pass multiple conditions like:
 ApiHandler::parseSingle($books, array('id_origin' => 'Random Bookstore Ltd', 'id' => 1337));
 ```
 
-###Configuration
+### Configuration
 
 To override the configuration, create a file called `apihandler.php` in the config folder of your app.  
 Check out the config file in the package source to see what options are available.
 
 
-###URL parsing
+### URL parsing
 
 Url parsing currently supports:
 * Limit the fields
@@ -70,7 +70,7 @@ Url parsing currently supports:
 
 There are two kind of api resources supported, a single object and a collection of objects.
 
-####Single object
+#### Single object
 
 If you handle a GET request on a resource representing a single object like for example `/api/books/1`, use the `parseSingle` method.
 
@@ -83,7 +83,7 @@ If you handle a GET request on a resource representing a single object like for 
 ApiHandler::parseSingle($book, 1);
 ```
 
-####Collection of objects
+#### Collection of objects
 
 If you handle a GET request on a resource representing multiple objects like for example `/api/books`, use the `parseMultiple` method.
 
@@ -96,7 +96,7 @@ If you handle a GET request on a resource representing multiple objects like for
 ApiHandler::parseMultiple($book, array('title', 'isbn', 'description'));
 ```
 
-####Result
+#### Result
 
 Both `parseSingle` and `parseMultiple` return a `Result` object with the following methods available:
 
@@ -122,7 +122,7 @@ Returns an array of meta provider objects. Each of these objects provide a speci
 **cleanup($cleanup) => $this:**
 If true, the resulting array will get cleaned up from unintentionally added relations. Defaults to the config `apihandler.cleanup_relations` which defaults to `false`.
 
-####Filtering
+#### Filtering
 Every query parameter, except the predefined functions `_fields`, `_with`, `_sort`, `_limit`, `_offset`, `_config` and `_q`, is interpreted as a filter. Be sure to remove additional parameters not meant for filtering before passing them to `parseMultiple`.
 
 ```
@@ -157,7 +157,7 @@ Respectively the `not-in` suffix:
 ```
 
 
-#####Suffixes
+##### Suffixes
 Suffix        | Operator      | Meaning
 ------------- | ------------- | -------------
 -lk           | LIKE          | Same as the SQL `LIKE` operator
@@ -170,13 +170,13 @@ Suffix        | Operator      | Meaning
 -gt           | >             | Greater than
 -not          | !=            | Not equal to
 
-####Sorting
+#### Sorting
 Two ways of sorting, ascending and descending. Every column which should be sorted descending always starts with a `-`.
 ```
 /api/books?_sort=-title,created_at
 ```
 
-####Fulltext search
+#### Fulltext search
 Two implementations of full text search are supported.
 You can choose which one to use by changing the `fulltext` option in the config file to either `default` or `native`.
 
@@ -204,7 +204,7 @@ Each result will also contain a `_score` column which allows you to sort the res
 
 You can adjust the name of this column by modifying the `fulltext_score_column` setting in the config file.
 
-####Limit the result set
+#### Limit the result set
 To define the maximum amount of datasets in the result, use `_limit`.
 ```
 /api/books?_limit=50
@@ -215,7 +215,7 @@ To define the offset of the datasets in the result, use `_offset`.
 ```
 Be aware that in order to use `offset` you always have to specify a `limit` too. MySQL throws an error for offset definition without a limit.
 
-####Include related models
+#### Include related models
 The api handler also supports Eloquent relationships. So if you want to get all the books with their authors, just add the authors to the `_with` parameter.
 ```
 /api/books?_with=author
@@ -239,7 +239,7 @@ This is necessary for security reasons, so that only real relation methods can b
 
 ***Note:*** Whenever you limit the fields with `_fields` in combination with `_with`. Under the hood the fields are extended with the primary/foreign keys of the relation. Eloquent needs the linking keys to get related models.
 
-####Include meta information
+#### Include meta information
 It's possible to add additional information to a response. There are currently two types of counts which can be added to the response headers.
 
 The `total-count` which represents the count of all elements of a resource or to be more specific, the count on the originally passed query builder instance.
@@ -256,7 +256,7 @@ Config            | Header
 meta-total-count  | Meta-Total-Count
 meta-filter-count | Meta-Filter-Count
 
-####Use an envelope for the response
+#### Use an envelope for the response
 By default meta data is included in the response header. If you want to have everything togheter in the response body you can request a so called "envelope"
 either by including `response-envelope` in the `_config` parameter or by overriding the default `config.php` of the package.
 
