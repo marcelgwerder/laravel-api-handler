@@ -208,12 +208,12 @@ class Result
         }
 
         // get the relations which already exists on the model (e.g. with $builder->with())
-        $allowedRelations = $this->getRelationsRecursively($model);
+        $allowedRelations = array_fill_keys($this->getRelationsRecursively($model), true);
 
         // parse the model to an array and get the relations which got added unintentionally
         // (e.g. when accessing a relation in an accessor method or somewhere else)
         $response = $model->toArray();
-        $loadedRelations = $this->getRelationsRecursively($model);
+        $loadedRelations = array_fill_keys($this->getRelationsRecursively($model), true);
 
         // remove the unintentionally added relations from the response
         return $this->removeUnallowedRelationsFromResponse($response, $allowedRelations, $loadedRelations);
@@ -268,8 +268,8 @@ class Result
             $relationKey = ($prefix ?: '') . $key;
 
             // handle associative arrays as they
-            if (in_array($relationKey, $loadedRelations)) {
-                if (!in_array($relationKey, $allowedRelations)) {
+            if (isset($loadedRelations[$relationKey])) {
+                if (!isset($allowedRelations[$relationKey])) {
                     unset($response[$key]);
                 } else if (is_array($attr)) {
                     $response[$key] = $this->removeUnallowedRelationsFromResponse($response[$key], $allowedRelations, $loadedRelations, ($prefix ?: '') . $relationKey . '.');
