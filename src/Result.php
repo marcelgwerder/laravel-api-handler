@@ -15,6 +15,13 @@ class Result
     protected $parser;
 
     /**
+     * If true, the result will get cleaned up from unintentionally added relations.
+     *
+     * @var null|bool
+     */
+    private $cleanup = null;
+
+    /**
      * Create a new result
      *
      * @param  Marcelgwerder\ApiHandler\Parser $parse
@@ -28,11 +35,23 @@ class Result
     /**
      * Return a laravel response object including the correct status code and headers
      *
+     * @param bool $resultOrFail
      * @return Illuminate\Support\Facades\Response
      */
-    public function getResponse()
+    public function getResponse($resultOrFail = false)
     {
         $headers = $this->getHeaders();
+
+        // if the cleanup flag is not explicitly set, get the default from the config
+        if ($this->cleanup === null) {
+            $this->cleanup(Config::get('apihandler.cleanup_relations', false));
+        }
+
+        if ($resultOrFail) {
+            $result = $this->getResultOrFail();
+        } else {
+            $result = $this->getResult();
+        }
 
         if ($this->parser->mode == 'count') {
             return Response::json($headers, 200, $headers);
@@ -40,10 +59,10 @@ class Result
             if ($this->parser->envelope) {
                 return Response::json([
                     'meta' => $headers,
-                    'data' => $this->getResult(),
+                    'data' => $result,
                 ], 200);
             } else {
-                return Response::json($this->getResult(), 200, $headers);
+                return Response::json($result, 200, $headers);
             }
 
         }
@@ -59,13 +78,13 @@ class Result
         if ($this->parser->multiple) {
             $result = $this->parser->builder->get();
 
-            if (Config::get('apihandler.cleanup_relations', false)) {
+            if ($this->cleanup) {
                 $result = $this->cleanupRelationsOnModels($result);
             }
         } else {
             $result = $this->parser->builder->first();
 
-            if (Config::get('apihandler.cleanup_relations', false)) {
+            if ($this->cleanup) {
                 $result = $this->cleanupRelations($result);
             }
         }
@@ -86,7 +105,7 @@ class Result
 
         $result = $this->parser->builder->firstOrFail();
 
-        if (Config::get('apihandler.cleanup_relations', false)) {
+        if ($this->cleanup) {
             $result = $this->cleanupRelations($result);
         }
 
@@ -142,6 +161,19 @@ class Result
     public function getMode()
     {
         return $this->parser->mode;
+    }
+
+    /**
+     * Set the cleanup flag
+     *
+     * @param $cleanup
+     * @return $this
+     */
+    public function cleanup($cleanup)
+    {
+        $this->cleanup = $cleanup;
+
+        return $this;
     }
 
     /**
