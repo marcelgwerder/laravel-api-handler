@@ -7,7 +7,10 @@ This helper package provides functionality for parsing the URL of a REST-API req
 
 ***Note:*** This version is for Laravel 5. When using Laravel 4 you need to use version 0.4.x.
 
-Install the package through composer by running `composer require marcelgwerder/laravel-api-handler`
+Install the package through composer by running 
+```
+composer require marcelgwerder/laravel-api-handler
+```
 
 Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
 ```
