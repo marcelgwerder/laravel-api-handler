@@ -9,7 +9,7 @@ This helper package provides functionality for parsing the URL of a REST-API req
 
 Install the package through composer by running `composer require marcelgwerder/laravel-api-handler`
 
-Then run `composer update`. Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
+Once composer finished add the service provider to the `providers` array in `app/config/app.php`:
 ```
 Marcelgwerder\ApiHandler\ApiHandlerServiceProvider::class,
 ```
