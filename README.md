@@ -258,7 +258,7 @@ meta-total-count  | Meta-Total-Count
 meta-filter-count | Meta-Filter-Count
 
 #### Use an envelope for the response
-By default meta data is included in the response header. If you want to have everything togheter in the response body you can request a so called "envelope"
+By default meta data is included in the response header. If you want to have everything together in the response body you can request a so called "envelope"
 either by including `response-envelope` in the `_config` parameter or by overriding the default `config.php` of the package.
 
 The envelope has the following structure:
