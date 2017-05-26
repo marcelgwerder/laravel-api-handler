@@ -283,4 +283,14 @@ class Result
 
         return $response;
     }
+
+    /**
+     * Convert the result to its string representation.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getResponse()->__toString();
+    }
 }
