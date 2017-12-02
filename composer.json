@@ -1,7 +1,8 @@
 {
-    "name": "betalabs/laravel-api-handler",
-    "description": "Package providing helper functions for a Laravel REST-API. This is a fix for PHP 7.2.",
+    "name": "marcelgwerder/laravel-api-handler",
+    "description": "Package providing helper functions for a Laravel REST-API ",
     "keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
+    "homepage": "http://github.com/marcelgwerder/laravel-api-handler",
     "license": "MIT",
     "authors": [
         {
