@@ -1,7 +1,10 @@
 ## Laravel API Handler
-[![Build Status](https://travis-ci.org/marcelgwerder/laravel-api-handler.png?branch=master)](https://travis-ci.org/marcelgwerder/laravel-api-handler) [![Latest Stable Version](https://poser.pugx.org/marcelgwerder/laravel-api-handler/v/stable.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![Total Downloads](https://poser.pugx.org/marcelgwerder/laravel-api-handler/downloads.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler) [![License](https://poser.pugx.org/marcelgwerder/laravel-api-handler/license.png)](https://packagist.org/packages/marcelgwerder/laravel-api-handler)
 
 This helper package provides functionality for parsing the URL of a REST-API request.
+
+### Attention
+
+This is a fix for `marcelgwerder/laravel-api-handler` on PHP 7.2. There is a pull request in original package.
 
 ### Installation
 

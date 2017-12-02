@@ -328,7 +328,7 @@ class Parser
     protected function parseWith($withParam)
     {
         $fields = $this->query->columns;
-        $fieldsCount = count($fields);
+        $fieldsCount = count($fields ?: []);
         $baseModel = $this->builder->getModel();
 
         $withHistory = [];
@@ -449,7 +449,7 @@ class Parser
         $this->builder->with($withsArr);
 
         //Merge the base fields
-        if (count($fields) > 0) {
+        if (count($fields ?: []) > 0) {
             if (!is_array($this->query->columns)) {
                 $this->query->columns = [];
             }
