@@ -1,4 +1,8 @@
-<?php namespace Marcelgwerder\ApiHandler;
+<?php 
+
+namespace Marcelgwerder\ApiHandler;
+
+use \Illuminate\Database\Query\Builder as QueryBuilder;
 
 class CountMetaProvider extends MetaProvider
 {
@@ -11,7 +15,18 @@ class CountMetaProvider extends MetaProvider
 
     public function __construct($title, $builder)
     {
-        $this->builder = clone $builder;
+        $builder = clone $builder;
+
+        if($builder instanceof QueryBuilder) {
+            $this->builder = $builder;
+        } else if(method_exists($builder, 'toBase')) {
+            // Laravel > 5.2 as global scopes, toBase makes sure they are included.
+            $this->builder = $builder->toBase();
+        } else {
+            // Laravel < 5.2 did not have global scopes and thus the query builder is enough.
+            $this->builder = $builder->getQuery();
+        }
+
         $this->title = $title;
 
         //Remove offset from builder because a count doesn't work in combination with an offset
@@ -36,6 +51,7 @@ class CountMetaProvider extends MetaProvider
 
             //Use the original builder as a subquery and count over it because counts over groups return the number of rows for each group, not for the total results
             $query = $this->builder->newQuery()->selectRaw('count(*) as aggregate from (' . $this->builder->toSql() . ') as count_table', $this->builder->getBindings());
+            
             return intval($query->first()->aggregate);
         }
 

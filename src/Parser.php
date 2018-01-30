@@ -649,9 +649,9 @@ class Parser
                 }
             } else if ($cat == 'meta') {
                 if ($option == 'total-count') {
-                    $this->meta[] = new CountMetaProvider('Meta-Total-Count', $this->originalQuery);
+                    $this->meta[] = new CountMetaProvider('Meta-Total-Count', $this->originalBuilder);
                 } else if ($option == 'filter-count') {
-                    $this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->query);
+                    $this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->builder);
                 }
             } else if ($cat == 'response') {
                 if ($option == 'envelope') {
