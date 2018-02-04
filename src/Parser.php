@@ -393,7 +393,7 @@ class Parser
                 } else if ($relationType === 'HasManyThrough') {
                     if (method_exists($relation, 'getQualifiedLocalKeyName')) {
                         $firstKey = $relation->getQualifiedLocalKeyName();
-                    } elseif (method_exists($relation, 'getExistenceCompareKey')) {
+                    } else if (method_exists($relation, 'getExistenceCompareKey')) {
                         // compatibility for laravel 5.4
                         $firstKey = $relation->getExistenceCompareKey();
                     } else {
