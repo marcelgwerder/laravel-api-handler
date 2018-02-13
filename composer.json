@@ -11,18 +11,24 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "~5.0",
-        "illuminate/database": "~5.0",
-        "illuminate/http": "~5.0"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "~4.5",
-        "mockery/mockery": "~0.9"
+        "php": ">=7.1.0",
+        "illuminate/support": "~5.5",
+        "illuminate/database": "~5.5",
+        "illuminate/http": "~5.5"
     },
     "autoload": {
         "psr-4": {
             "Marcelgwerder\\ApiHandler\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Marcelgwerder\\ApiHandler\\ApiHandlerServiceProvider"
+            ],
+            "aliases": {
+                "ApiHandler": "Marcelgweder\\ApiHandler\\Facades\\ApiHandler"
+            }
         }
     },
     "minimum-stability": "stable"

@@ -1,11 +1,11 @@
 language: php
 
 php: 
-  - "5.4"
-  - "5.5"
+  - "7.1"
+  - "7.2"
 
 env:
-  - LARAVEL_VERSION="4.2.*"
+  - LARAVEL_VERSION="5.5.*"
   - LARAVEL_VERSION="dev-master"
 
 before_script:
