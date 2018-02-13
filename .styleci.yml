@@ -1,3 +1,2 @@
-php: 
-  preset: laravel
-  risky: false
+preset: laravel
+risky: false
