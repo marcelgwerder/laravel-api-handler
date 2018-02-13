@@ -504,6 +504,7 @@ class Parser
             'min' => '>=',
             'max' => '<=',
             'lk' => 'LIKE',
+            'ilk' => 'ILIKE',
             'not-lk' => 'NOT LIKE',
             'in' => 'IN',
             'not-in' => 'NOT IN',
@@ -552,7 +553,7 @@ class Parser
                 if (count($values) > 1) {
                     $this->query->where(function ($query) use ($column, $comparator, $values) {
                         foreach ($values as $value) {
-                            if ($comparator == 'LIKE' || $comparator == 'NOT LIKE') {
+                            if ($comparator == 'LIKE' || $comparator == 'NOT LIKE' || $comparator == 'ILIKE') {
                                 $value = preg_replace('/(^\*|\*$)/', '%', $value);
                             }
 
@@ -567,7 +568,7 @@ class Parser
                 } else {
                     $value = $values[0];
 
-                    if ($comparator == 'LIKE' || $comparator == 'NOT LIKE') {
+                    if ($comparator == 'LIKE' || $comparator == 'NOT LIKE' || $comparator == 'ILIKE') {
                         $value = preg_replace('/(^\*|\*$)/', '%', $value);
                     }
 
