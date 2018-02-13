@@ -1,12 +1,13 @@
 <?php
+
 use Mockery as m;
-use \Illuminate\Database\Eloquent\Collection;
-use \Illuminate\Database\Query\Expression;
-use \Illuminate\Http\JsonResponse;
-use \Illuminate\Support\Facades\Config;
-use \Illuminate\Support\Facades\Input;
-use \Illuminate\Support\Facades\Response;
-use \Marcelgwerder\ApiHandler\ApiHandler;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Response;
+use Marcelgwerder\ApiHandler\ApiHandler;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Eloquent\Collection;
 
 class ApiHandlerTest extends PHPUnit_Framework_TestCase
 {
@@ -123,7 +124,6 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
     public function testGetBuilder()
     {
-
         $post = new Post();
 
         $builder = $this->apiHandler->parseMultiple($post, ['title', 'description'], $this->params)->getBuilder();
@@ -159,7 +159,6 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
                     $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Example Title', 'boolean' => 'or'], $subWheres[0]);
                     $this->assertEquals(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'LIKE', 'value' => 'Another Title', 'boolean' => 'or'], $subWheres[1]);
                 }
-
             }
         }
 

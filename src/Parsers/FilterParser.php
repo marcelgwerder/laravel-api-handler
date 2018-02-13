@@ -2,9 +2,9 @@
 
 namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class FilterParser implements Parser
 {
@@ -19,6 +19,5 @@ class FilterParser implements Parser
 
     public function apply(Builder $builder, Model $model)
     {
-
     }
 }

@@ -7,11 +7,10 @@ use Marcelgwerder\ApiHandler\Parsers\FilterParser;
 
 class ApiHandlerServiceProvider extends ServiceProvider
 {
-
     protected $parsers = [
         FilterParser::class,
     ];
-    
+
     /**
      * Register bindings in the container.
      *
@@ -20,13 +19,13 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/apihandler.php', 'apihandler'
+            __DIR__.'/../config/apihandler.php', 'apihandler'
         );
 
         $this->app->bind(ApiHandler::class, function ($app) {
-            $apiHandler = new ApiHandler(); 
+            $apiHandler = new ApiHandler();
 
-            foreach($this->parsers as $parser) {
+            foreach ($this->parsers as $parser) {
                 $apiHandler->registerParser($parser);
             }
 
@@ -42,7 +41,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/apihandler.php' => config_path('apihandler.php'),
+            __DIR__.'/../config/apihandler.php' => config_path('apihandler.php'),
         ]);
     }
 }
