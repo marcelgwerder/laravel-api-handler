@@ -2,11 +2,11 @@
 
 namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
+use Marcelgwerder\ApiHandler\Parsers\Parser;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
 use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
-use Marcelgwerder\ApiHandler\Parsers\Parser;
 
 class ApiHandler
 {
@@ -78,8 +78,8 @@ class ApiHandler
     {
         if (is_string($builder)) {
             $builder = ($builder)::query();
-        } else if (!$model instanceof Builder) {
-            throw new InvalidArgumentException('The base builder must be either an instance of ' . Builder::class . ' or an absolute class string.');
+        } elseif (! $model instanceof Builder) {
+            throw new InvalidArgumentException('The base builder must be either an instance of '.Builder::class.' or an absolute class string.');
         }
 
         return new static($builder, $request ?? request());
@@ -151,7 +151,6 @@ class ApiHandler
      */
     public function searchable(array $searchables): self
     {
-
     }
 
     /**
@@ -162,7 +161,6 @@ class ApiHandler
      */
     public function filterable(array $filterables): self
     {
-
     }
 
     /**
@@ -173,7 +171,6 @@ class ApiHandler
      */
     public function expandable(array $expandables): self
     {
-
     }
 
     /**
@@ -184,15 +181,13 @@ class ApiHandler
      */
     public function sortable(array $sortables): self
     {
-
     }
 
     /**
-     * Parse the given query parameters and return a ApiHandlerBag
+     * Parse the given query parameters and return a ApiHandlerBag.
      */
     public function parse(): void
     {
-
     }
 
     public function apply(): self
@@ -210,7 +205,7 @@ class ApiHandler
         $this->builder->callScope(function (Builder $builder) use ($scope) {
             if ($scope instanceof Closure) {
                 $scope($builder);
-            } else if ($scope instanceof Scope) {
+            } elseif ($scope instanceof Scope) {
                 $scope->apply($builder, $this->getModel());
             }
         });
@@ -277,5 +272,4 @@ class ApiHandler
             throw new InvalidArgumentException();
         }
     }
-
 }

@@ -1,7 +1,7 @@
 <?php
 
-use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
+use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
 
 return [
 
@@ -81,5 +81,5 @@ return [
     |
      */
 
-    'default_resource_collection' => ResourceCollection::class
+    'default_resource_collection' => ResourceCollection::class,
 ];
