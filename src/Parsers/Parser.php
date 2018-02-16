@@ -2,7 +2,9 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
+use Marcelgwerder\ApiHandler\ApiHandler;
 use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Http\Request;
 
 abstract class Parser implements Scope
 {

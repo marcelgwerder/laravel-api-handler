@@ -16,7 +16,7 @@ class ResourceCollection extends IlluminateResourceCollection
     {
         return [
             'data' => $this->collection,
-            'meta' => array_map('get', $this->metaProviders),
+           // 'meta' => array_map('get', $this->metaProviders),
         ];
     }
 }

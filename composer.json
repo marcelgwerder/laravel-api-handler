@@ -17,6 +17,9 @@
         "illuminate/http": "~5.5"
     },
     "autoload": {
+        "files": [
+            "src/helpers.php"
+        ],
         "psr-4": {
             "Marcelgwerder\\ApiHandler\\": "src"
         }
