@@ -20,4 +20,40 @@ namespace Marcelgwerder\ApiHandler\helpers {
 
         return false;
     }
+
+    /**
+     * Check if a callable returns a specific type
+     */
+    function returns_type(string $className, string $methodName, string $type): boolean
+    {
+        $method = new ReflectionMethod($className, $methodName);
+
+        return $method->getReturnType() === $type;
+    }
+
+    function array_undot(string $dotPath)
+    {
+        $array = [];
+
+        foreach ($dotNotationArray as $key => $value) {
+            array_set($array, $key, $value);
+        }
+        return $array;
+    }
+
+    function nullify_empty($var)
+    {
+        if (empty($var)) {
+            return null;
+        }
+
+        return $var;
+    }
+
+    function unqualify_column($column)
+    {
+        $pos = (strpos($column, '.') ?: 0) + 1;
+
+        return substr($column,  $pos === 1 ? 0 : $pos);
+    }
 }

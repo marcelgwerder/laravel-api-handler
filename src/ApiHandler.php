@@ -4,9 +4,12 @@ namespace Marcelgwerder\ApiHandler;
 
 use function Marcelgwerder\ApiHandler\helpers\is_allowed_path;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Http\Request;
 use Marcelgwerder\ApiHandler\Contracts\Filter;
+use Marcelgwerder\ApiHandler\Contracts\Expandable;
 use Marcelgwerder\ApiHandler\Database\Eloquent\Builder;
 use Marcelgwerder\ApiHandler\Parsers\Parser;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
@@ -64,6 +67,13 @@ class ApiHandler
      * @var array
      */
     protected $searchables = [];
+
+    /**
+     * Selectable columns.
+     *
+     * @var array
+     */
+    protected $selectables = [];
 
     /**
      * Resource collection used by default.
@@ -129,13 +139,15 @@ class ApiHandler
     {
         if (is_string($builder)) {
             $builder = ($builder)::query();
-
-            $this->originalBuilder = $builder;
-            $this->builder = new Builder($builder);
-            $this->request = $request ?? request();
-        } elseif (!$model instanceof EloquentBuilder) {
-            throw new InvalidArgumentException('The base builder must be either an instance of ' . Builder::class . ' or an absolute class string.');
+        } elseif ($builder instanceof Model) {
+            $builder = $builder->newQuery();
+        } elseif (!$builder instanceof EloquentBuilder) {
+            throw new InvalidArgumentException('The base builder must be either an instance of ' . EloquentBuilder::class . ' or an absolute class string.');
         }
+
+        $this->originalBuilder = $builder;
+        $this->builder = new Builder($builder);
+        $this->request = $request ?? request();
 
         return $this;
     }
@@ -248,6 +260,19 @@ class ApiHandler
     }
 
     /**
+     * Define the columns that should be selectable.
+     *
+     * @param  array|string|dynamic  $selectables
+     * @return $this
+     */
+    public function selectable($selectables): self
+    {
+        $this->selectables = is_array($selectables) ? $selectables : func_get_args();
+
+        return $this;
+    }
+
+    /**
      * Define the columns that should be sortable.
      *
      * @param  array|string|dynamic  $sortables
@@ -274,7 +299,7 @@ class ApiHandler
         // Parse the request before we apply the result
         // of each parser to the builder instance.
         foreach ($this->parsers as $parser) {
-            $parser->parse($this->request);
+            $parser->parse($this->request, $this->parsers);
         }
 
         foreach ($this->parsers as $parser) {
@@ -386,15 +411,65 @@ class ApiHandler
     }
 
     /**
-     * Check whether a given column is filterable
+     * Check whether the path is filterable.
+     *
+     * @param  string  $path
+     * @return void
      */
-    public function isFilterable(string $column)
+    public function isFilterable(string $path)
     {
-        return is_allowed_path($column, $this->filterables);
+        return is_allowed_path($path, $this->filterables);
     }
 
-    public function isSortable(string $column)
+    /**
+     * Check whether the path is sortable.
+     *
+     * @param  string  $path
+     * @return boolean
+     */
+    public function isSortable(string $path)
     {
-        return is_allowed_path($column, $this->sortables);
+        return is_allowed_path($path, $this->sortables);
+    }
+
+    /**
+     * Check whether the path is selectable.
+     *
+     * @param  string  $path
+     * @return boolean
+     */
+    public function isSelectable(string $path)
+    {
+        return is_allowed_path($path, $this->selectables);
+    }
+
+    /**
+     * Check whether the path is expandable.
+     *
+     * @param  string  $path
+     * @return boolean
+     */
+    public function isExpandable(string $path)
+    {
+        if (!empty($this->expandables)) {
+            $expandables = $this->expandables;
+        } else {
+            $model = $this->builder->getModel();
+
+            if ($model instanceof Expandable) {
+                $expandables = $model->expandable();
+            } else {
+                $expandables = [];
+            }
+        }
+
+        // Check if the path to the relation is allowed by the dev
+        if (!is_allowed_path($path, $expandables)) {
+            return false;
+        }
+
+        // Walks all the relations without doing anything on it, will return false
+        // if a method does not exist or not return a relation.
+        return $this->builder->walkRelations($path);
     }
 }

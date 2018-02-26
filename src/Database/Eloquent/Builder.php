@@ -2,8 +2,12 @@
 
 namespace Marcelgwerder\ApiHandler\Database\Eloquent;
 
+use function Marcelgwerder\ApiHandler\helpers\nullify_empty;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use \ReflectionClass;
+use \ReflectionException;
+use \ReflectionMethod;
 use \ReflectionProperty;
 
 class Builder extends EloquentBuilder
@@ -31,4 +35,44 @@ class Builder extends EloquentBuilder
         parent::callScope($scope, $parameters);
     }
 
+    /**
+     * Walk through all the models of the relations in the path.
+     *
+     * @param  string  $path
+     * @param  callable  $callback
+     * @return void
+     */
+    public function walkRelations(string $path, callable $callback = null)
+    {
+        $relation = [];
+
+        $currentModel = $this->getModel();
+        $walkedRealtions = [];
+
+        foreach (explode('.', $path) as $relationName) {
+            $parentPath = nullify_empty(implode('.', $walkedRealtions));
+            $walkedRealtions[] = $relationName;
+            
+            try {
+                $method = new ReflectionMethod(get_class($currentModel), $relationName);
+                $returnType = $method->getReturnType();
+            } catch (ReflectionException $e) {
+                $returnType = null;
+            }
+
+            if ((string) $returnType !== Relation::class) {
+                return false;
+            }
+
+            $relation = call_user_func([$currentModel, $relationName]);
+
+            if ($callback) {
+                $callback($relation, implode('.', $walkedRealtions), $parentPath);
+            }
+
+            $currentModel = $relation->getRelated();
+        }
+
+        return true;
+    }
 }

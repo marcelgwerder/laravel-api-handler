@@ -15,5 +15,5 @@ abstract class Parser implements Scope
         $this->handler = $handler;
     }
 
-    abstract public function parse(Request $request): void;
+    abstract public function parse(Request $request): ?array;
 }

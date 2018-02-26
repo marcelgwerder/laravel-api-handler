@@ -15,7 +15,7 @@ class FilterParser extends Parser
 
     protected $filterMatch = '/^filter(?:$|-([a-z\-]+)$)/';
 
-    public function parse(Request $request): void
+    public function parse(Request $request): ?array
     {
         $parameters = array_filter($request->all(), function ($parameterName) {
             return preg_match($this->filterMatch, $parameterName);
@@ -32,6 +32,8 @@ class FilterParser extends Parser
 
             $this->parseParameter($filter, $parameterValue);
         }
+
+        return $this->filters;
     }
 
     public function apply(Builder $builder, Model $model)

@@ -12,9 +12,13 @@ class SortParser extends Parser
 {
     protected $sorts = [];
 
-    public function parse(Request $request): void
+    public function parse(Request $request): ?array
     {
         $sort = $request->input('sort');
+
+        if(empty($sort)) {
+            return null;
+        }
 
         foreach (explode(',', $sort) as $sort) {
             $columnPath = ltrim($sort, '-');
@@ -29,6 +33,8 @@ class SortParser extends Parser
                 throw new InvalidSortException('Sort path "'.$columnPath.'" is not allowed on this endpoint.');
             }
         }
+
+        return $this->sorts;
     }
 
     public function apply(Builder $builder, Model $model)

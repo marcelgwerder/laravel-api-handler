@@ -5,8 +5,10 @@ namespace Marcelgwerder\ApiHandler;
 use Illuminate\Support\ServiceProvider;
 
 use Marcelgwerder\ApiHandler\Parsers\{
+    SelectParser,
     FilterParser,
-    SortParser
+    SortParser,
+    ExpansionParser
 };
 
 use Marcelgwerder\ApiHandler\Filters\{
@@ -25,8 +27,10 @@ use Marcelgwerder\ApiHandler\Filters\{
 class ApiHandlerServiceProvider extends ServiceProvider
 {
     protected $parsers = [
+        SelectParser::class,
         FilterParser::class,
         SortParser::class,
+        ExpansionParser::class,
     ];
 
     protected $filters = [
