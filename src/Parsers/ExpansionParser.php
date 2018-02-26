@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidExpandException;
-use function Marcelgwerder\ApiHandler\helpers\unqualify_column;
 
 class ExpansionParser extends Parser
 {
@@ -26,10 +28,10 @@ class ExpansionParser extends Parser
      */
     public function parse(Request $request): ?array
     {
-        if(!$request->has('expand')) {
+        if (!$request->has('expand')) {
             return null;
         }
-        
+
         $expand = $request->input('expand');
 
         $builder = $this->handler->getBuilder();
@@ -38,7 +40,7 @@ class ExpansionParser extends Parser
 
         $expansions = [];
         foreach ($matches[1] as $number => $expansion) {
-            $columns = explode(',', $matches[2][$number]);
+            $columns = $matches[2][$number] !== '' ? explode(',', $matches[2][$number]) : [];
 
             if (!$this->handler->isExpandable($expansion)) {
                 throw new InvalidExpandException('Expansion path "' . $expansion . '" is not allowed on this endpoint.');
@@ -49,10 +51,15 @@ class ExpansionParser extends Parser
 
                 // Check whether we're on the last relation of the path.
                 // If yes, we also add the columns selected.
-                if ($expansion === $path) {
+                // Additionally exclude polymorphic relations because selecting fields
+                // is currently not supported on those relations.
+                if ($expansion === $path && $this->isPolymorphic($relation) && !empty($columns)) {
+                    throw new InvalidExpandException('Expansion "' . $expansion . '" does not accept columns since it is polymorphic.');
+                } elseif ($expansion === $path) {
                     $columns = array_map(function ($column) use ($relation) {
                         return $relation->getRelated()->getTable() . '.' . $column;
                     }, $columns);
+                    $column = [];
                 } else {
                     $columns = [];
                 }
@@ -63,6 +70,8 @@ class ExpansionParser extends Parser
                 $expansions[$path] = array_unique(array_merge($expansions[$path] ?? [], $required['related'], $columns));
             })->bindTo($this));
         }
+
+        //dd($expansions);
 
         return $this->expansions = $expansions;
     }
@@ -92,15 +101,57 @@ class ExpansionParser extends Parser
         $builder->with($withs);
     }
 
+    /**
+     * Check if a relation is polymorphic
+     *
+     * @param  Illuminate\Database\Eloquent\Relations\Relation  $relation
+     * @return bool
+     */
+    protected function isPolymorphic(Relation $relation): bool
+    {
+        return $relation instanceof MorphMany || $relation instanceof MorphToMany || $relation instanceof MorphTo;
+    }
+
+    /**
+     * Determine which of the parent and related columns are required so
+     * the related models can be properly matched to the parent.
+     * 
+     * @param  Illuminate\Database\Eloquent\Relations\Relation  $relation
+     * @return array
+     */
     protected function determineRequiredColumns(Relation $relation): array
     {
-        if ($relation instanceof BelongsTo) {
+        if ($relation instanceof MorphMany) {
             $parent = [
                 $relation->getQualifiedParentKeyName(),
             ];
 
             $related = [
+                $relation->getRelated()->getQualifiedKeyName(),
+            ];
+        } elseif ($relation instanceof MorphTo) {
+            $parent = [
                 $relation->getQualifiedForeignKey(),
+                $relation->getRelated()->getTable() . '.' . $relation->getMorphType(),
+            ];
+
+            $related = [
+                $relation->getQualifiedParentKeyName(),
+            ];
+        } elseif ($relation instanceof MorphToMany) {
+            $parent = [
+                $relation->getQualifiedParentKeyName(),
+            ];
+            $related = [
+                $relation->getRelated()->getQualifiedKeyName(),
+            ];
+        } elseif ($relation instanceof BelongsTo) {
+            $parent = [
+                $relation->getQualifiedForeignKey(),
+            ];
+
+            $related = [
+                $relation->getQualifiedOwnerKeyName(),
             ];
         } elseif ($relation instanceof HasMany || $relation instanceof HasOne) {
             $parent = [
@@ -121,17 +172,12 @@ class ExpansionParser extends Parser
             $parent = [
                 $relation->getQualifiedLocalKeyName(),
             ];
-        } elseif ($relation instanceof MorphMany || $relation instanceof MorphTo) {
-            $parent = [
-                $relation->getQualifiedParentKeyName(),
-            ];
 
             $related = [
                 $relation->getQualifiedForeignKeyName(),
-                $relation->getRelated()->getTable() . '.' . $relation->getMorphType(),
             ];
         } else {
-            throw ApiHandlerException('Relation "'.get_class($relation).'" is not supported.');
+            throw ApiHandlerException('Relation "' . get_class($relation) . '" is not supported.');
         }
 
         return [
