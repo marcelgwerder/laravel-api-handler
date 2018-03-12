@@ -3,12 +3,14 @@
 namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Config\Repository as ConfigRepository;
 
 use Marcelgwerder\ApiHandler\Parsers\{
     SelectParser,
     FilterParser,
     SortParser,
-    ExpansionParser
+    ExpansionParser,
+    PaginationParser
 };
 
 use Marcelgwerder\ApiHandler\Filters\{
@@ -31,6 +33,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
         FilterParser::class,
         SortParser::class,
         ExpansionParser::class,
+        PaginationParser::class,
     ];
 
     protected $filters = [
@@ -57,7 +60,9 @@ class ApiHandlerServiceProvider extends ServiceProvider
         );
 
         $this->app->bind('apihandler', function ($app) {
-            $apiHandler = new ApiHandler();
+            $configRepository = new ConfigRepository(config('apihandler'));
+            
+            $apiHandler = new ApiHandler($configRepository);
 
             foreach ($this->parsers as $parser) {
                 $apiHandler->registerParser($parser);

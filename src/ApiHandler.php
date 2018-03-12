@@ -3,13 +3,15 @@
 namespace Marcelgwerder\ApiHandler;
 
 use function Marcelgwerder\ApiHandler\helpers\is_allowed_path;
+use Illuminate\Contracts\Config\Repository as ConfigContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Http\Request;
-use Marcelgwerder\ApiHandler\Contracts\Filter;
+use Marcelgwerder\ApiHandler\Contracts\ApiHandlerConfig;
 use Marcelgwerder\ApiHandler\Contracts\Expandable;
+use Marcelgwerder\ApiHandler\Contracts\Filter;
 use Marcelgwerder\ApiHandler\Database\Eloquent\Builder;
 use Marcelgwerder\ApiHandler\Parsers\Parser;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
@@ -118,15 +120,20 @@ class ApiHandler
     protected $applied = false;
 
     /**
+     * Keeps track of the currently relevant config based on the config file.
+     *
+     * @var  \Illuminate\Contracts\Config\Repository
+     */
+    public $config;
+
+    /**
      * Create a new api handler instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Http\Request  $request
      * @return void
      */
-    public function __construct()
+    public function __construct(ConfigContract $config)
     {
-        // ...
+        $this->config = $config;
     }
 
     /**
@@ -148,6 +155,18 @@ class ApiHandler
         $this->originalBuilder = $builder;
         $this->builder = new Builder($builder);
         $this->request = $request ?? request();
+
+        // If the model implements a config, we merge it with the existing config
+        // which is injected by the service provider.
+        if ($builder->getModel() instanceof ApiHandlerConfig) {
+            $modelConfig = array_dot($builder->getModel()->mergeApiHandlerConfig());
+
+            foreach ($modelConfig as $key => $value) {
+                if ($this->config->has($key)) {
+                    $this->config->set($key, $value);
+                }
+            }
+        }
 
         return $this;
     }
@@ -211,7 +230,7 @@ class ApiHandler
     }
 
     /**
-     * Get the builder instance.
+     * Returns the builder instance.
      *
      * @return \Marcelgwerder\ApiHandler\Database\Eloquent\Builder
      */
@@ -221,55 +240,13 @@ class ApiHandler
     }
 
     /**
-     * Define the columns that should be searchable.
+     * Returns the original builder instance.
      *
-     * @param  array|string|dynamic  $searchables
-     * @return $this
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function searchable($searchables): self
+    public function getOriginalBuilder(): Builder
     {
-        $this->searchables = is_array($searchables) ? $searchables : func_get_args();
-
-        return $this;
-    }
-
-    /**
-     * Define the columns that should be filterable.
-     *
-     * @param  array|string|dynamic  $filterables
-     * @return $this
-     */
-    public function filterable($filterables): self
-    {
-        $this->filterables = is_array($filterables) ? $filterables : func_get_args();
-
-        return $this;
-    }
-
-    /**
-     * Define the relations that should be expandable.
-     *
-     * @param  array|string|dynamic  $expandables
-     * @return $this
-     */
-    public function expandable($expandables): self
-    {
-        $this->expandables = is_array($expandables) ? $expandables : func_get_args();
-
-        return $this;
-    }
-
-    /**
-     * Define the columns that should be selectable.
-     *
-     * @param  array|string|dynamic  $selectables
-     * @return $this
-     */
-    public function selectable($selectables): self
-    {
-        $this->selectables = is_array($selectables) ? $selectables : func_get_args();
-
-        return $this;
+        return $this->originalBuilder;
     }
 
     /**
@@ -418,7 +395,7 @@ class ApiHandler
      */
     public function isFilterable(string $path)
     {
-        return is_allowed_path($path, $this->filterables);
+        return is_allowed_path($path, $this->config->get('filterable'));
     }
 
     /**
@@ -429,7 +406,7 @@ class ApiHandler
      */
     public function isSortable(string $path)
     {
-        return is_allowed_path($path, $this->sortables);
+        return is_allowed_path($path, $this->config->get('sortable'));
     }
 
     /**
@@ -440,7 +417,7 @@ class ApiHandler
      */
     public function isSelectable(string $path)
     {
-        return is_allowed_path($path, $this->selectables);
+        return is_allowed_path($path, $this->config->get('selectable'));
     }
 
     /**
@@ -451,8 +428,8 @@ class ApiHandler
      */
     public function isExpandable(string $path)
     {
-        if (!empty($this->expandables)) {
-            $expandables = $this->expandables;
+        if (!empty($this->config->get('expandable'))) {
+            $expandables = $this->config->get('expandable');
         } else {
             $model = $this->builder->getModel();
 
@@ -471,5 +448,33 @@ class ApiHandler
         // Walks all the relations without doing anything on it, will return false
         // if a method does not exist or not return a relation.
         return $this->builder->walkRelations($path);
+    }
+
+    /**
+     * Forward the method calls that match config keys to the config repository.
+     *
+     * @inheritDoc
+     */
+    public function __call($methodName, $arguments)
+    {
+        $config = $this->config->all();
+
+        $keyName = snake_case($methodName);
+
+        if (isset($config[$keyName])) {
+            $argumentCount = count($arguments);
+            $currentValue = $this->config->get($keyName);
+            if (count($arguments) === 0) {
+                $this->config->set($keyName, true);
+            } elseif (is_array($currentValue)) {
+                $this->config->set($keyName, $arguments);
+            } else {
+                $this->config->set($keyName, $arguments[0]);
+            }
+
+            return $this;
+        } else {
+            trigger_error('Call to undefined method ' . __CLASS__ . '::' . $methodName . '()', E_USER_ERROR);
+        }
     }
 }

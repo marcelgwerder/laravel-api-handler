@@ -47,7 +47,9 @@ class SelectParser extends Parser
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->addSelect($this->columns);
+        if (!empty($this->columns)) {
+            $builder->addSelect($this->columns);
+        }
     }
 
     /**

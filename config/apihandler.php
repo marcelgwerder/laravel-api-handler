@@ -96,4 +96,65 @@ return [
      */
 
     'default_resource_collection' => ResourceCollection::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Searchable
+    |--------------------------------------------------------------------------
+    |
+    | This array contains the searchable columns that will be allowed for every
+    | request unless overridden by the model or endpoint config. 
+    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    |
+     */
+    'searchable' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filterable
+    |--------------------------------------------------------------------------
+    |
+    | This array contains the filterable columns that will be allowed for every
+    | request unless overridden by the model or endpoint config. 
+    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    |
+     */
+    'filterable' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sortable
+    |--------------------------------------------------------------------------
+    |
+    | This array contains the sortable columns that will be allowed for every
+    | request unless overridden by the model or endpoint config. 
+    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    |
+     */
+    'sortable' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Expandable
+    |--------------------------------------------------------------------------
+    |
+    | This array contains the expandable columns that will be allowed for every
+    | request unless overridden by the model or endpoint config. 
+    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    |
+     */
+    'expandable' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Selectable
+    |--------------------------------------------------------------------------
+    |
+    | This array contains the selectable columns that will be allowed for every
+    | request unless overridden by the model or endpoint config. 
+    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    |
+     */
+    'selectable' => [],
+
 ];

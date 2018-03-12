@@ -54,6 +54,6 @@ namespace Marcelgwerder\ApiHandler\helpers {
     {
         $pos = (strpos($column, '.') ?: 0) + 1;
 
-        return substr($column,  $pos === 1 ? 0 : $pos);
+        return substr($column, $pos === 1 ? 0 : $pos);
     }
 }

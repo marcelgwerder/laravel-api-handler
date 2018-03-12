@@ -52,7 +52,7 @@ class Builder extends EloquentBuilder
         foreach (explode('.', $path) as $relationName) {
             $parentPath = nullify_empty(implode('.', $walkedRealtions));
             $walkedRealtions[] = $relationName;
-            
+
             try {
                 $method = new ReflectionMethod(get_class($currentModel), $relationName);
                 $returnType = $method->getReturnType();
