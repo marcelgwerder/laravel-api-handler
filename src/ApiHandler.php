@@ -13,6 +13,7 @@ use Marcelgwerder\ApiHandler\Contracts\ApiHandlerConfig;
 use Marcelgwerder\ApiHandler\Contracts\Expandable;
 use Marcelgwerder\ApiHandler\Contracts\Filter;
 use Marcelgwerder\ApiHandler\Database\Eloquent\Builder;
+use Marcelgwerder\ApiHandler\Parsers\PaginationParser;
 use Marcelgwerder\ApiHandler\Parsers\Parser;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
 use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
@@ -127,6 +128,13 @@ class ApiHandler
     public $config;
 
     /**
+     * Pagination parser which is applied differently than the rest.
+     *
+     * @var  \Marcelgwerder\ApiHandler\Parsers\Parser
+     */
+    protected $paginationParser;
+
+    /**
      * Create a new api handler instance.
      *
      * @return void
@@ -191,7 +199,9 @@ class ApiHandler
             $resourceClass = $this->resourceClass;
         }
 
-        return new $resourceClass($this->builder->first());
+        return (new $resourceClass($this->builder->first()))->additional([
+            'random_data' => 'fwefw',
+        ]);
     }
 
     /**
@@ -214,7 +224,20 @@ class ApiHandler
             $resourceCollectionClass = $this->resourceCollectionClass;
         }
 
-        return new $resourceCollectionClass($this->builder->get());
+        if ($this->paginationParser !== null) {
+            $pageSize = $this->paginationParser->pageSize;
+            $page = $this->paginationParser->page;
+
+            $results = $this->builder->paginate($pageSize, ['*'], 'page', $page);
+
+            // Make sure all the query parameters are included in the pagination links.
+            // They are needed because they contribute to the resulting query.
+            $results->appends($this->request->except('page'));
+        } else {
+            $results = $this->builder->get();
+        }
+
+        return new $resourceCollectionClass($results);
     }
 
     /**
@@ -279,6 +302,10 @@ class ApiHandler
             $parser->parse($this->request, $this->parsers);
         }
 
+        if ($this->paginationParser !== null) {
+            $this->paginationParser->parse($this->request, $this->parsers);
+        }
+
         foreach ($this->parsers as $parser) {
             $parser->apply($this->builder, $this->builder->getModel());
         }
@@ -317,10 +344,14 @@ class ApiHandler
      * @param  \Marcelgwerder\ApiHandler\Contracts\Parser  $parser
      * @return $this
      */
-    public function registerParser(string $parserClass): self
+    public function registerParser(string $parserClass, bool $pagination = false): self
     {
         if (is_subclass_of($parserClass, Parser::class)) {
-            $this->parsers[] = new $parserClass($this);
+            if ($pagination) {
+                $this->paginationParser = new $parserClass($this);
+            } else {
+                $this->parsers[] = new $parserClass($this);
+            }
         } else {
             throw new InvalidArgumentException();
         }
@@ -406,7 +437,16 @@ class ApiHandler
      */
     public function isSortable(string $path)
     {
-        return is_allowed_path($path, $this->config->get('sortable'));
+        $sortable = $this->config->get('sortable');
+        $searchScoreColumn = $this->config->get('search_score_column');
+
+        if ($searchScoreColumn !== null) {
+            // We add the search score column to the resulting sortable list.
+            // It is very common to sort by this column and should be possible by default.
+            $sortable[] = $searchScoreColumn;
+        }
+
+        return is_allowed_path($path, $sortable);
     }
 
     /**

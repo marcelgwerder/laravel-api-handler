@@ -65,9 +65,10 @@ class ExpansionParser extends Parser
                 }
 
                 $required = $this->determineRequiredColumns($relation);
+                $requiredRelated = !empty($columns) ? $required['related'] : [];
 
                 $expansions[$parentPath] = array_unique(array_merge($expansions[$parentPath] ?? [], $required['parent']));
-                $expansions[$path] = array_unique(array_merge($expansions[$path] ?? [], $required['related'], $columns));
+                $expansions[$path] = array_unique(array_merge($expansions[$path] ?? [], $requiredRelated, $columns));
             })->bindTo($this));
         }
 
@@ -90,7 +91,9 @@ class ExpansionParser extends Parser
 
         $withs = array_map(function ($columns) {
             return function ($query) use ($columns) {
-                $query->addSelect($columns);
+                if(!empty($columns)) {
+                    $query->addSelect($columns);
+                }
             };
         }, $expansions);
 
@@ -177,7 +180,7 @@ class ExpansionParser extends Parser
                 $relation->getQualifiedForeignKeyName(),
             ];
         } else {
-            throw ApiHandlerException('Relation "' . get_class($relation) . '" is not supported.');
+            throw new InvalidExpandException('Relation "' . get_class($relation) . '" is not supported.');
         }
 
         return [

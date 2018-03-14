@@ -10,7 +10,8 @@ use Marcelgwerder\ApiHandler\Parsers\{
     FilterParser,
     SortParser,
     ExpansionParser,
-    PaginationParser
+    PaginationParser,
+    SearchParser
 };
 
 use Marcelgwerder\ApiHandler\Filters\{
@@ -28,12 +29,20 @@ use Marcelgwerder\ApiHandler\Filters\{
 
 class ApiHandlerServiceProvider extends ServiceProvider
 {
+    
+    /**
+     * The parsers used to parse and apply sepcific query parameter.
+     * Note that the order of those parsers sometimes matters.
+     * The search e.g. needs to come after the select and expansion parsers.
+     * 
+     * @var array
+     */
     protected $parsers = [
         SelectParser::class,
         FilterParser::class,
         SortParser::class,
         ExpansionParser::class,
-        PaginationParser::class,
+        SearchParser::class,
     ];
 
     protected $filters = [
@@ -67,6 +76,10 @@ class ApiHandlerServiceProvider extends ServiceProvider
             foreach ($this->parsers as $parser) {
                 $apiHandler->registerParser($parser);
             }
+
+            // Register the pagination parser seperately since it is applied
+            // in a slightly different way than the rest of the parsers.
+            $apiHandler->registerParser(PaginationParser::class, true);
 
             foreach($this->filters as $suffix => $filter) {
                 $apiHandler->registerFilter($suffix, new $filter);

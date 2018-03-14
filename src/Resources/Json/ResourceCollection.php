@@ -6,6 +6,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection as IlluminateResourceColle
 
 class ResourceCollection extends IlluminateResourceCollection
 {
+
     /**
      * Transform the resource into an array.
      *
@@ -15,8 +16,7 @@ class ResourceCollection extends IlluminateResourceCollection
     public function toArray($request)
     {
         return [
-            'data' => $this->collection,
-           // 'meta' => array_map('get', $this->metaProviders),
+            'data' => $this->collection
         ];
     }
 }

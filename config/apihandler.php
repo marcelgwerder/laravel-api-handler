@@ -8,16 +8,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Application Name
+    | CleanExpansions
     |--------------------------------------------------------------------------
     |
-    | This value is the name of your application. This value is used when the
-    | framework needs to place the application's name in a notification or
-    | any other location as required by the application or its packages.
+    | Whether expansions/relations that were internally added rather than 
+    | by api request should be removed from the result. 
+    | It usually makes sense since the developer did not request the expansion.
     |
      */
 
-    'fulltext_search' => 'native',
+    'clean_expansions' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | CleanExpansions
+    |--------------------------------------------------------------------------
+    |
+    | Wheter columns not explicitly selected should be removed from the result.
+    |
+     */
+    'clean_selects' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Driver
+    |--------------------------------------------------------------------------
+    |
+    | Defines the driver used for fulltext search. The native driver requires
+    | a fulltext index on the columns that should be searched. 
+    |
+     */
+
+    'search_driver' => 'native',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Score Column
+    |--------------------------------------------------------------------------
+    |
+    | Defines how the column is named that is returned 
+    | for native fulltext search.
+    |
+     */
+    'search_score_column' => 'search_score',
 
     /*
     |--------------------------------------------------------------------------
@@ -104,7 +137,7 @@ return [
     |
     | This array contains the searchable columns that will be allowed for every
     | request unless overridden by the model or endpoint config. 
-    | Usually, this property stays empty or contains a single '*' wildcard entry.
+    | Usually, this property stays empty in the global config.
     |
      */
     'searchable' => [],

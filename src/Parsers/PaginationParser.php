@@ -10,33 +10,33 @@ use Marcelgwerder\ApiHandler\Exceptions\InvalidPaginationException;
 class PaginationParser extends Parser
 {
     /**
-     * The limit that has to be applied to the query.
+     * The pageSize that has to be applied to the query.
      *
      * @var int
      */
-    protected $limit;
+    public $pageSize;
 
     /**
-     * The offset that has to be applied to the query.
+     * The page that has to be applied to the query.
      *
      * @var int
      */
-    protected $offset;
+    public $page;
 
     /**
-     * Parse the "expand" query parameter.
+     * Parse the pagination query parameters.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return void
      */
     public function parse(Request $request): ?array
     {
-        $this->limit = $this->parseLimit($request);
-        $this->offset = $this->parseOffset($request, $this->limit);
+        $this->pageSize = $this->parsePageSize($request);
+        $this->page = $this->parsepage($request, $this->pageSize);
 
         return [
-            'limit' => $this->limit,
-            'offset' => $this->offset,
+            'pageSize' => $this->pageSize,
+            'page' => $this->page,
         ];
     }
 
@@ -49,61 +49,47 @@ class PaginationParser extends Parser
      */
     public function apply(Builder $builder, Model $model)
     {
-        if ($this->limit !== null) {
-            $builder->limit($this->limit);
-
-            if ($this->offset !== null) {
-                $builder->offset($this->offset);
-            }
-        }
+        // No implementation since pagination is handled by the Laravel pagination.
     }
 
     /**
-     * Parse the limit for the given request.
+     * Parse the pageSize for the given request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return int
      */
-    protected function parseLimit(Request $request): ?int
+    protected function parsePageSize(Request $request): ?int
     {
-        if ($request->has('limit')) {
-            $limit = $request->limit;
-        } elseif ($request->has('pageSize')) {
-            $limit = $request->pageSize;
+        if ($request->has('pageSize')) {
+            $pageSize = $request->pageSize;
         } else {
-            $limit = $this->handler->config->get('default_page_size');
+            $pageSize = $this->handler->config->get('default_page_size');
         }
 
-        if (!is_numeric($limit)) {
-            throw new InvalidPaginationException('The page size or limit is expected to be numeric, "' . $limit . '" given.');
-        } elseif ($limit > $this->handler->config->get('max_page_size')) {
-            throw new InvalidPaginationException('The page size or limit is expected to be smaller than ' . $this->handler->config->get('max_page_size') . ', ' . $limit . ' given.');
+        if (!is_numeric($pageSize)) {
+            throw new InvalidPaginationException('The page size or is expected to be numeric, "' . $pageSize . '" given.');
+        } elseif ($pageSize > $this->handler->config->get('max_page_size')) {
+            throw new InvalidPaginationException('The page size or is expected to be smaller than ' . $this->handler->config->get('max_page_size') . ', ' . $pageSize . ' given.');
         }
 
-        return (int) $limit;
+        return (int) $pageSize;
     }
 
     /**
-     * Parse the offset for the given request and limit.
+     * Parse the page for the given request and pageSize.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $limit
+     * @param  int  $pageSize
      * @return int
      */
-    protected function parseOffset(Request $request, int $limit): ?int
+    protected function parsePage(Request $request, int $pageSize): ?int
     {
-        if ($request->has('offset')) {
-            $offset = $request->offset;
-        } elseif ($request->has('page')) {
-            $offset = ((int) $request->page - 1) * $limit;
-        } else {
-            $offset = null;
+        $page = $request->get('page', null);
+
+        if (!is_numeric($page) && $page !== null) {
+            throw new InvalidPaginationException('The page is expected to be numeric, "' . $page . '" given.');
         }
 
-        if (!is_numeric($offset) && $offset !== null) {
-            throw new InvalidPaginationException('The offset is expected to be numeric, "' . $offset . '" given.');
-        }
-
-        return $offset;
+        return (int) $page;
     }
 }
