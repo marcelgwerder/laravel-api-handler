@@ -13,7 +13,7 @@ class SearchParser extends Parser
     /**
      * The search term which which should be searched for.
      *
-     * @var int
+     * @var string
      */
     protected $searchTerm;
 

@@ -199,9 +199,7 @@ class ApiHandler
             $resourceClass = $this->resourceClass;
         }
 
-        return (new $resourceClass($this->builder->first()))->additional([
-            'random_data' => 'fwefw',
-        ]);
+        return new $resourceClass($this->builder->first());
     }
 
     /**
