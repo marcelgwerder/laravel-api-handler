@@ -1,9 +1,5 @@
 <?php
 
-use Marcelgwerder\ApiHandler\Filters\EqualFilter;
-use Marcelgwerder\ApiHandler\Resources\Json\Resource;
-use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
-
 return [
 
     /*
@@ -89,7 +85,7 @@ return [
     |
      */
 
-    'default_filter' => EqualFilter::class,
+    'default_filter' => Marcelgwerder\ApiHandler\Resources\Filters\EqualFilter::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -102,7 +98,7 @@ return [
     |
      */
 
-    'default_limit' => 500,
+    'default_resource' => Marcelgwerder\ApiHandler\Resources\Json\Resource::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -115,20 +111,7 @@ return [
     |
      */
 
-    'default_resource' => Resource::class,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    |
-    | This value is the name of your application. This value is used when the
-    | framework needs to place the application's name in a notification or
-    | any other location as required by the application or its packages.
-    |
-     */
-
-    'default_resource_collection' => ResourceCollection::class,
+    'default_resource_collection' => Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -188,6 +171,44 @@ return [
     | Usually, this property stays empty or contains a single '*' wildcard entry.
     |
      */
-    'selectable' => [],
+    'selectable' => ['*'],
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filters
+    |--------------------------------------------------------------------------
+    |
+    | This array contains all filters that can be used by the filter parser.
+    |
+     */
+    'filters' => [
+        'default' => Marcelgwerder\ApiHandler\Filters\EqualFilter::class,
+        'lk' => Marcelgwerder\ApiHandler\Filters\LikeFilter::class,
+        'not-lk' => Marcelgwerder\ApiHandler\Filters\NotLikeFilter::class,
+        'in' => Marcelgwerder\ApiHandler\Filters\InFilter::class,
+        'not-in' => Marcelgwerder\ApiHandler\Filters\NotInFilter::class,
+        'st' => Marcelgwerder\ApiHandler\Filters\SmallerThanFilter::class,
+        'gt' => Marcelgwerder\ApiHandler\Filters\GreaterThanFilter::class,
+        'min' => Marcelgwerder\ApiHandler\Filters\MinFilter::class,
+        'max' => Marcelgwerder\ApiHandler\Filters\MaxFilter::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parsers
+    |--------------------------------------------------------------------------
+    |
+    | This array contains all parsers used to parse the query
+    | parameters and apply them to the query builder.
+    |
+     */
+    'parsers' => [
+        Marcelgwerder\ApiHandler\Parsers\SelectParser::class,
+        Marcelgwerder\ApiHandler\Parsers\FilterParser::class,
+        Marcelgwerder\ApiHandler\Parsers\SortParser::class,
+        Marcelgwerder\ApiHandler\Parsers\ExpansionParser::class,
+        Marcelgwerder\ApiHandler\Parsers\PaginationParser::class,
+        Marcelgwerder\ApiHandler\Parsers\SearchParser::class,
+    ],
 ];

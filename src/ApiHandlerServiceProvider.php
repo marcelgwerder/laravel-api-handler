@@ -2,60 +2,18 @@
 
 namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Config\Repository as ConfigRepository;
-
-use Marcelgwerder\ApiHandler\Parsers\{
-    SelectParser,
-    FilterParser,
-    SortParser,
-    ExpansionParser,
-    PaginationParser,
-    SearchParser
-};
-
-use Marcelgwerder\ApiHandler\Filters\{
-    EqualFilter,
-    NotEqualFilter,
-    LikeFilter,
-    NotLikeFilter,
-    InFilter,
-    NotInFilter,
-    MinFilter,
-    MaxFilter,
-    GreaterThanFilter,
-    SmallerThanFilter
-};
+use Illuminate\Support\ServiceProvider;
+use Marcelgwerder\ApiHandler\Parsers\PaginationParser;
 
 class ApiHandlerServiceProvider extends ServiceProvider
 {
-    
     /**
-     * The parsers used to parse and apply sepcific query parameter.
-     * Note that the order of those parsers sometimes matters.
-     * The search e.g. needs to come after the select and expansion parsers.
-     * 
-     * @var array
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
      */
-    protected $parsers = [
-        SelectParser::class,
-        FilterParser::class,
-        SortParser::class,
-        ExpansionParser::class,
-        SearchParser::class,
-    ];
-
-    protected $filters = [
-        'default' => EqualFilter::class,
-        'lk' => LikeFilter::class,
-        'not-lk' => NotLikeFilter::class,
-        'in' => InFilter::class,
-        'not-in' => NotInFilter::class,
-        'st' => SmallerThanFilter::class,
-        'gt' => GreaterThanFilter::class,
-        'min' => MinFilter::class,
-        'max' => MaxFilter::class,
-    ];
+    protected $defer = true;
 
     /**
      * Register bindings in the container.
@@ -65,15 +23,17 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/apihandler.php', 'apihandler'
+            __DIR__ . '/../config/apihandler.php', 'apihandler'
         );
 
         $this->app->bind('apihandler', function ($app) {
             $configRepository = new ConfigRepository(config('apihandler'));
-            
+
             $apiHandler = new ApiHandler($configRepository);
 
-            foreach ($this->parsers as $parser) {
+            $parsers = $configRepository->get('parsers');
+
+            foreach ($parsers as $parser) {
                 $apiHandler->registerParser($parser);
             }
 
@@ -81,7 +41,9 @@ class ApiHandlerServiceProvider extends ServiceProvider
             // in a slightly different way than the rest of the parsers.
             $apiHandler->registerParser(PaginationParser::class, true);
 
-            foreach($this->filters as $suffix => $filter) {
+            $filters = $configRepository->get('filters');
+
+            foreach ($filters as $suffix => $filter) {
                 $apiHandler->registerFilter($suffix, new $filter);
             }
 
@@ -97,7 +59,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/apihandler.php' => config_path('apihandler.php'),
+            __DIR__ . '/../config/apihandler.php' => config_path('apihandler.php'),
         ]);
     }
 }
