@@ -16,6 +16,6 @@ class ApiHandler extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'apihandler';
+        return \Marcelgwerder\ApiHandler\ApiHandler::class;
     }
 }

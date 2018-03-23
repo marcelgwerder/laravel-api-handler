@@ -94,7 +94,6 @@ The default resource will automatically include the necessary pagination informa
 ```json
 {
     "data": [
-        ...
     ],
     "links": {
         "first": "https://laravel/api/posts?pageSize=10&page=1",

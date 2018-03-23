@@ -23,6 +23,13 @@ use \InvalidArgumentException;
 class ApiHandler
 {
     /**
+     * Base config array.
+     * 
+     * @var  array
+     */
+    protected static $baseConfig;
+    
+    /**
      * Untouched builder instance originally passed to the handler.
      *
      * @var \Illuminate\Database\Eloquent\Builder
@@ -495,16 +502,18 @@ class ApiHandler
      */
     public function __call($methodName, $arguments)
     {
-        $config = $this->config->all();
+        self::$baseConfig = self::$baseConfig ?: require __DIR__ . '/../config/apihandler.php';
 
         $keyName = snake_case($methodName);
 
-        if (isset($config[$keyName])) {
+        if (isset(self::$baseConfig[$keyName])) {
             $argumentCount = count($arguments);
             $currentValue = $this->config->get($keyName);
+            $baseValueType = gettype(self::$baseConfig[$keyName]);
+
             if (count($arguments) === 0) {
                 $this->config->set($keyName, true);
-            } elseif (is_array($currentValue)) {
+            } elseif ($baseValueType === 'array') {
                 $this->config->set($keyName, $arguments);
             } else {
                 $this->config->set($keyName, $arguments[0]);

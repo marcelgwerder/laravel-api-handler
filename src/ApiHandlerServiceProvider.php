@@ -1,5 +1,4 @@
 <?php
-
 namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Config\Repository as ConfigRepository;
@@ -26,7 +25,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
             __DIR__ . '/../config/apihandler.php', 'apihandler'
         );
 
-        $this->app->bind('apihandler', function ($app) {
+        $this->app->bind(ApiHandler::class, function ($app) {
             $configRepository = new ConfigRepository(config('apihandler'));
 
             $apiHandler = new ApiHandler($configRepository);

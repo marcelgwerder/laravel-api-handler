@@ -72,8 +72,6 @@ class ExpansionParser extends Parser
             })->bindTo($this));
         }
 
-        //dd($expansions);
-
         return $this->expansions = $expansions;
     }
 
@@ -91,13 +89,14 @@ class ExpansionParser extends Parser
 
         $withs = array_map(function ($columns) {
             return function ($query) use ($columns) {
-                if(!empty($columns)) {
+                if (!empty($columns)) {
                     $query->addSelect($columns);
                 }
             };
         }, $expansions);
 
-        if (!empty($baseColumns)) {
+        // Only add the required select if there is already a column in the list.
+        if (!empty($baseColumns) && !empty($builder->getQuery()->columns)) {
             $builder->addSelect($baseColumns);
         }
 
@@ -118,7 +117,7 @@ class ExpansionParser extends Parser
     /**
      * Determine which of the parent and related columns are required so
      * the related models can be properly matched to the parent.
-     * 
+     *
      * @param  Illuminate\Database\Eloquent\Relations\Relation  $relation
      * @return array
      */
