@@ -61,4 +61,14 @@ class ApiHandlerServiceProvider extends ServiceProvider
             __DIR__ . '/../config/apihandler.php' => config_path('apihandler.php'),
         ]);
     }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return [ApiHandler::class];
+    }
 }
