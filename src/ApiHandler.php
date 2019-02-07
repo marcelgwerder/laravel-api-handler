@@ -285,7 +285,9 @@ class ApiHandler
      */
     public function sortable($sortables): self
     {
-        $this->sortables = is_array($sortables) ? $sortables : func_get_args();
+        $sortables = is_array($sortables) ? $sortables : [$sortables];
+
+        $this->config->set('sortable', $sortables);
 
         return $this;
     }
