@@ -4,9 +4,9 @@ namespace Marcelgwerder\ApiHandler\Concerns;
 
 trait ResolvesMetadata
 {
-    protected function resolveMetadata(Collection $providers) 
+    protected function resolveMetadata(Collection $providers)
     {
-        return $providers->mapWithKeys(function($provider) {
+        return $providers->mapWithKeys(function ($provider) {
             return [$provider->getKey() => $provider->getValue()];
         });
     }

@@ -2,7 +2,7 @@
 
 namespace Marcelgwerder\ApiHandler\Exceptions;
 
-use \Exception;
+use Exception;
 
 class ApiHandlerException extends Exception
 {

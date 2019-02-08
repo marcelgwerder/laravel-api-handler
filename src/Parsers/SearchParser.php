@@ -2,10 +2,10 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Expression;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidSearchException;
 
 class SearchParser extends Parser
@@ -37,7 +37,7 @@ class SearchParser extends Parser
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $builder
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -48,7 +48,7 @@ class SearchParser extends Parser
         if ($this->searchTerm === null) {
             // If the search query is not set, we just do nothing.
             return;
-        } else if (trim($this->searchTerm) === '') {
+        } elseif (trim($this->searchTerm) === '') {
             // Make sure an empty search query results in an empty response.
             // We simply achieve this by adding a where condition that will never be true.
             $builder->whereRaw('0 = 1');
@@ -72,7 +72,7 @@ class SearchParser extends Parser
             $columnCount = count($queryBuilder->columns ?: []);
             $searchScoreIndex = array_search($scoreColumn, array_column($queryBuilder->orders ?: [], 'column'));
 
-            if($columnCount === 0 || $searchScoreIndex !== false) {
+            if ($columnCount === 0 || $searchScoreIndex !== false) {
                 // There are two cases where we need the search score column:
                 // A: The column is needed in the response
                 // B: We want to sort by the column
@@ -82,11 +82,11 @@ class SearchParser extends Parser
                 // the the proper match against expression to be able to select the search score column by its alias.
                 $searchScoreIndex = array_search($scoreColumn, $queryBuilder->columns ?: []);
 
-                if($searchScoreIndex !== false) {
+                if ($searchScoreIndex !== false) {
                     $queryBuilder->columns[$searchScoreIndex] = new Expression("$matchAgainst AS `$scoreColumn`");
-                }       
-            }     
-            
+                }
+            }
+
             $builder->whereRaw($matchAgainst);
 
             if ($columnCount === 0) {

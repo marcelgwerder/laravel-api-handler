@@ -2,11 +2,10 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Marcelgwerder\ApiHandler\Exceptions\InvalidSortException;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Marcelgwerder\ApiHandler\Exceptions\InvalidSortException;
 
 class SortParser extends Parser
 {
@@ -16,7 +15,7 @@ class SortParser extends Parser
     {
         $sort = $request->input('sort');
 
-        if(empty($sort)) {
+        if (empty($sort)) {
             return null;
         }
 

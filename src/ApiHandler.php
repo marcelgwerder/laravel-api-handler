@@ -2,33 +2,32 @@
 
 namespace Marcelgwerder\ApiHandler;
 
-use function Marcelgwerder\ApiHandler\helpers\is_allowed_path;
-use Illuminate\Contracts\Config\Repository as ConfigContract;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Scope;
+use Closure;
 use Illuminate\Http\Request;
-use Marcelgwerder\ApiHandler\Contracts\ApiHandlerConfig;
-use Marcelgwerder\ApiHandler\Contracts\Expandable;
-use Marcelgwerder\ApiHandler\Contracts\Filter;
-use Marcelgwerder\ApiHandler\Database\Eloquent\Builder;
-use Marcelgwerder\ApiHandler\Parsers\PaginationParser;
+use InvalidArgumentException;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
 use Marcelgwerder\ApiHandler\Parsers\Parser;
+use Marcelgwerder\ApiHandler\Contracts\Filter;
+use Marcelgwerder\ApiHandler\Contracts\Expandable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Marcelgwerder\ApiHandler\Resources\Json\Resource;
+use Marcelgwerder\ApiHandler\Database\Eloquent\Builder;
+use Marcelgwerder\ApiHandler\Contracts\ApiHandlerConfig;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Config\Repository as ConfigContract;
+use function Marcelgwerder\ApiHandler\helpers\is_allowed_path;
 use Marcelgwerder\ApiHandler\Resources\Json\ResourceCollection;
-use \Closure;
-use \InvalidArgumentException;
 
 class ApiHandler
 {
     /**
      * Base config array.
-     * 
+     *
      * @var  array
      */
     protected static $baseConfig;
-    
+
     /**
      * Untouched builder instance originally passed to the handler.
      *
@@ -163,8 +162,8 @@ class ApiHandler
             $builder = ($builder)::query();
         } elseif ($builder instanceof Model) {
             $builder = $builder->newQuery();
-        } elseif (!$builder instanceof EloquentBuilder) {
-            throw new InvalidArgumentException('The base builder must be either an instance of ' . EloquentBuilder::class . ' or an absolute class string.');
+        } elseif (! $builder instanceof EloquentBuilder) {
+            throw new InvalidArgumentException('The base builder must be either an instance of '.EloquentBuilder::class.' or an absolute class string.');
         }
 
         $this->originalBuilder = $builder;
@@ -425,7 +424,7 @@ class ApiHandler
      * Check whether the path is sortable.
      *
      * @param  string  $path
-     * @return boolean
+     * @return bool
      */
     public function isSortable(string $path)
     {
@@ -445,7 +444,7 @@ class ApiHandler
      * Check whether the path is selectable.
      *
      * @param  string  $path
-     * @return boolean
+     * @return bool
      */
     public function isSelectable(string $path)
     {
@@ -456,11 +455,11 @@ class ApiHandler
      * Check whether the path is expandable.
      *
      * @param  string  $path
-     * @return boolean
+     * @return bool
      */
     public function isExpandable(string $path)
     {
-        if (!empty($this->config->get('expandable'))) {
+        if (! empty($this->config->get('expandable'))) {
             $expandables = $this->config->get('expandable');
         } else {
             $model = $this->builder->getModel();
@@ -473,7 +472,7 @@ class ApiHandler
         }
 
         // Check if the path to the relation is allowed by the dev
-        if (!is_allowed_path($path, $expandables)) {
+        if (! is_allowed_path($path, $expandables)) {
             return false;
         }
 
@@ -484,12 +483,10 @@ class ApiHandler
 
     /**
      * Forward the method calls that match config keys to the config repository.
-     *
-     * @inheritDoc
      */
     public function __call($methodName, $arguments)
     {
-        self::$baseConfig = self::$baseConfig ?: require __DIR__ . '/../config/apihandler.php';
+        self::$baseConfig = self::$baseConfig ?: require __DIR__.'/../config/apihandler.php';
 
         $keyName = snake_case($methodName);
 
@@ -508,7 +505,7 @@ class ApiHandler
 
             return $this;
         } else {
-            trigger_error('Call to undefined method ' . __CLASS__ . '::' . $methodName . '()', E_USER_ERROR);
+            trigger_error('Call to undefined method '.__CLASS__.'::'.$methodName.'()', E_USER_ERROR);
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidSelectException;
 
 class SelectParser extends Parser
@@ -19,7 +19,7 @@ class SelectParser extends Parser
      */
     public function parse(Request $request): ?array
     {
-        if (!$request->has('select')) {
+        if (! $request->has('select')) {
             return null;
         }
 
@@ -31,7 +31,7 @@ class SelectParser extends Parser
                     $this->columns[] = trim($column);
                 }
             } else {
-                throw new InvalidSelectException('Select path "' . $column . '" is not allowed on this endpoint.');
+                throw new InvalidSelectException('Select path "'.$column.'" is not allowed on this endpoint.');
             }
         }
 
@@ -47,7 +47,7 @@ class SelectParser extends Parser
      */
     public function apply(Builder $builder, Model $model)
     {
-        if (!empty($this->columns)) {
+        if (! empty($this->columns)) {
             $builder->addSelect($this->columns);
         }
     }

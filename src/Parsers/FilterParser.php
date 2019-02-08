@@ -2,12 +2,12 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Marcelgwerder\ApiHandler\Contracts\Filter;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidFilterException;
-use \Closure;
 
 class FilterParser extends Parser
 {
@@ -27,7 +27,7 @@ class FilterParser extends Parser
             $filter = $this->handler->getRegisteredFilter($filterSuffix);
 
             if ($filter === null) {
-                throw new InvalidFilterException('No filter registered under the suffix "' . $filterSuffix . '"');
+                throw new InvalidFilterException('No filter registered under the suffix "'.$filterSuffix.'"');
             }
 
             $this->parseParameter($filter, $parameterValue);
@@ -38,7 +38,7 @@ class FilterParser extends Parser
 
     public function apply(Builder $builder, Model $model)
     {
-        if (!isset($this->filters['.'])) {
+        if (! isset($this->filters['.'])) {
             return false;
         }
 
@@ -75,7 +75,7 @@ class FilterParser extends Parser
                     $this->filters[$parentPath] = $this->filters[$parentPath] ?? [];
                     $this->filters[$parentPath][] = [$filter, $value, $column];
                 } else {
-                    throw new InvalidFilterException('Filter path "' . $columnPath . '" is not allowed on this endpoint.');
+                    throw new InvalidFilterException('Filter path "'.$columnPath.'" is not allowed on this endpoint.');
                 }
             }
         } else {

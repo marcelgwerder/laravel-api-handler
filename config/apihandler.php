@@ -7,8 +7,8 @@ return [
     | CleanExpansions
     |--------------------------------------------------------------------------
     |
-    | Whether expansions/relations that were internally added rather than 
-    | by api request should be removed from the result. 
+    | Whether expansions/relations that were internally added rather than
+    | by api request should be removed from the result.
     | It usually makes sense since the developer did not request the expansion.
     |
      */
@@ -31,7 +31,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Defines the driver used for fulltext search. The native driver requires
-    | a fulltext index on the columns that should be searched. 
+    | a fulltext index on the columns that should be searched.
     |
      */
 
@@ -42,7 +42,7 @@ return [
     | Search Score Column
     |--------------------------------------------------------------------------
     |
-    | Defines how the column is named that is returned 
+    | Defines how the column is named that is returned
     | for native fulltext search.
     |
      */
@@ -119,7 +119,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the searchable columns that will be allowed for every
-    | request unless overridden by the model or endpoint config. 
+    | request unless overridden by the model or endpoint config.
     | Usually, this property stays empty in the global config.
     |
      */
@@ -131,7 +131,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the filterable columns that will be allowed for every
-    | request unless overridden by the model or endpoint config. 
+    | request unless overridden by the model or endpoint config.
     | Usually, this property stays empty or contains a single '*' wildcard entry.
     |
      */
@@ -143,7 +143,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the sortable columns that will be allowed for every
-    | request unless overridden by the model or endpoint config. 
+    | request unless overridden by the model or endpoint config.
     | Usually, this property stays empty or contains a single '*' wildcard entry.
     |
      */
@@ -155,7 +155,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the expandable columns that will be allowed for every
-    | request unless overridden by the model or endpoint config. 
+    | request unless overridden by the model or endpoint config.
     | Usually, this property stays empty or contains a single '*' wildcard entry.
     |
      */
@@ -167,12 +167,11 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the selectable columns that will be allowed for every
-    | request unless overridden by the model or endpoint config. 
+    | request unless overridden by the model or endpoint config.
     | Usually, this property stays empty or contains a single '*' wildcard entry.
     |
      */
     'selectable' => ['*'],
-
 
     /*
     |--------------------------------------------------------------------------

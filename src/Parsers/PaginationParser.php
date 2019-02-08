@@ -2,9 +2,9 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidPaginationException;
 
 class PaginationParser extends Parser
@@ -41,7 +41,7 @@ class PaginationParser extends Parser
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $builder
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -66,10 +66,10 @@ class PaginationParser extends Parser
             $pageSize = $this->handler->config->get('default_page_size');
         }
 
-        if (!is_numeric($pageSize)) {
-            throw new InvalidPaginationException('The page size or is expected to be numeric, "' . $pageSize . '" given.');
+        if (! is_numeric($pageSize)) {
+            throw new InvalidPaginationException('The page size or is expected to be numeric, "'.$pageSize.'" given.');
         } elseif ($pageSize > $this->handler->config->get('max_page_size')) {
-            throw new InvalidPaginationException('The page size or is expected to be smaller than ' . $this->handler->config->get('max_page_size') . ', ' . $pageSize . ' given.');
+            throw new InvalidPaginationException('The page size or is expected to be smaller than '.$this->handler->config->get('max_page_size').', '.$pageSize.' given.');
         }
 
         return (int) $pageSize;
@@ -86,8 +86,8 @@ class PaginationParser extends Parser
     {
         $page = $request->get('page', null);
 
-        if (!is_numeric($page) && $page !== null) {
-            throw new InvalidPaginationException('The page is expected to be numeric, "' . $page . '" given.');
+        if (! is_numeric($page) && $page !== null) {
+            throw new InvalidPaginationException('The page is expected to be numeric, "'.$page.'" given.');
         }
 
         return (int) $page;
