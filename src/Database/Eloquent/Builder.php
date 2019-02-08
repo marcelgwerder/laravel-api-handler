@@ -2,13 +2,13 @@
 
 namespace Marcelgwerder\ApiHandler\Database\Eloquent;
 
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionProperty;
+use ReflectionException;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use function Marcelgwerder\ApiHandler\helpers\nullify_empty;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use \ReflectionClass;
-use \ReflectionException;
-use \ReflectionMethod;
-use \ReflectionProperty;
 
 class Builder extends EloquentBuilder
 {

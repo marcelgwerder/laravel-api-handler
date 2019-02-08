@@ -3,8 +3,8 @@
 namespace Foo\Bar;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Marcelgwerder\ApiHandler\Contracts\Expandable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class RelatedEloquentModelStub extends Model implements Expandable
 {

@@ -1,8 +1,9 @@
 <?php
+
 namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Config\Repository as ConfigRepository;
 use Marcelgwerder\ApiHandler\Parsers\PaginationParser;
 
 class ApiHandlerServiceProvider extends ServiceProvider
@@ -22,7 +23,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/apihandler.php', 'apihandler'
+            __DIR__.'/../config/apihandler.php', 'apihandler'
         );
 
         $this->app->bind(ApiHandler::class, function ($app) {
@@ -58,7 +59,7 @@ class ApiHandlerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/apihandler.php' => config_path('apihandler.php'),
+            __DIR__.'/../config/apihandler.php' => config_path('apihandler.php'),
         ]);
     }
 

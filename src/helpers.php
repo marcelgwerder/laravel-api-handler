@@ -11,7 +11,7 @@ namespace Marcelgwerder\ApiHandler\helpers {
     function is_allowed_path($path, array $haystack)
     {
         foreach ($haystack as $straw) {
-            $strawExp = '/^' . str_replace('\*', '.*', preg_quote($straw)) . '$/';
+            $strawExp = '/^'.str_replace('\*', '.*', preg_quote($straw)).'$/';
 
             if (preg_match($strawExp, $path)) {
                 return true;
@@ -22,7 +22,7 @@ namespace Marcelgwerder\ApiHandler\helpers {
     }
 
     /**
-     * Check if a callable returns a specific type
+     * Check if a callable returns a specific type.
      */
     function returns_type(string $className, string $methodName, string $type): boolean
     {
@@ -38,6 +38,7 @@ namespace Marcelgwerder\ApiHandler\helpers {
         foreach ($dotNotationArray as $key => $value) {
             array_set($array, $key, $value);
         }
+
         return $array;
     }
 

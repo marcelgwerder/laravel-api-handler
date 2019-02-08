@@ -2,18 +2,18 @@
 
 namespace Marcelgwerder\ApiHandler\Parsers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Marcelgwerder\ApiHandler\Exceptions\InvalidExpandException;
 
 class ExpansionParser extends Parser
@@ -28,7 +28,7 @@ class ExpansionParser extends Parser
      */
     public function parse(Request $request): ?array
     {
-        if (!$request->has('expand')) {
+        if (! $request->has('expand')) {
             return null;
         }
 
@@ -42,8 +42,8 @@ class ExpansionParser extends Parser
         foreach ($matches[1] as $number => $expansion) {
             $columns = $matches[2][$number] !== '' ? explode(',', $matches[2][$number]) : [];
 
-            if (!$this->handler->isExpandable($expansion)) {
-                throw new InvalidExpandException('Expansion path "' . $expansion . '" is not allowed on this endpoint.');
+            if (! $this->handler->isExpandable($expansion)) {
+                throw new InvalidExpandException('Expansion path "'.$expansion.'" is not allowed on this endpoint.');
             }
 
             $builder->walkRelations($expansion, (function (Relation $relation, string $path, ?string $parentPath) use (&$expansions, $expansion, $columns) {
@@ -53,11 +53,11 @@ class ExpansionParser extends Parser
                 // If yes, we also add the columns selected.
                 // Additionally exclude polymorphic relations because selecting fields
                 // is currently not supported on those relations.
-                if ($expansion === $path && $this->isPolymorphic($relation) && !empty($columns)) {
-                    throw new InvalidExpandException('Expansion "' . $expansion . '" does not accept columns since it is polymorphic.');
+                if ($expansion === $path && $this->isPolymorphic($relation) && ! empty($columns)) {
+                    throw new InvalidExpandException('Expansion "'.$expansion.'" does not accept columns since it is polymorphic.');
                 } elseif ($expansion === $path) {
                     $columns = array_map(function ($column) use ($relation) {
-                        return $relation->getRelated()->getTable() . '.' . $column;
+                        return $relation->getRelated()->getTable().'.'.$column;
                     }, $columns);
                     $column = [];
                 } else {
@@ -65,7 +65,7 @@ class ExpansionParser extends Parser
                 }
 
                 $required = $this->determineRequiredColumns($relation);
-                $requiredRelated = !empty($columns) ? $required['related'] : [];
+                $requiredRelated = ! empty($columns) ? $required['related'] : [];
 
                 $expansions[$parentPath] = array_unique(array_merge($expansions[$parentPath] ?? [], $required['parent']));
                 $expansions[$path] = array_unique(array_merge($expansions[$path] ?? [], $requiredRelated, $columns));
@@ -89,14 +89,14 @@ class ExpansionParser extends Parser
 
         $withs = array_map(function ($columns) {
             return function ($query) use ($columns) {
-                if (!empty($columns)) {
+                if (! empty($columns)) {
                     $query->addSelect($columns);
                 }
             };
         }, $expansions);
 
         // Only add the required select if there is already a column in the list.
-        if (!empty($baseColumns) && !empty($builder->getQuery()->columns)) {
+        if (! empty($baseColumns) && ! empty($builder->getQuery()->columns)) {
             $builder->addSelect($baseColumns);
         }
 
@@ -104,7 +104,7 @@ class ExpansionParser extends Parser
     }
 
     /**
-     * Check if a relation is polymorphic
+     * Check if a relation is polymorphic.
      *
      * @param  Illuminate\Database\Eloquent\Relations\Relation  $relation
      * @return bool
@@ -134,7 +134,7 @@ class ExpansionParser extends Parser
         } elseif ($relation instanceof MorphTo) {
             $parent = [
                 $relation->getQualifiedForeignKey(),
-                $relation->getRelated()->getTable() . '.' . $relation->getMorphType(),
+                $relation->getRelated()->getTable().'.'.$relation->getMorphType(),
             ];
 
             $related = [
@@ -179,7 +179,7 @@ class ExpansionParser extends Parser
                 $relation->getQualifiedForeignKeyName(),
             ];
         } else {
-            throw new InvalidExpandException('Relation "' . get_class($relation) . '" is not supported.');
+            throw new InvalidExpandException('Relation "'.get_class($relation).'" is not supported.');
         }
 
         return [
@@ -187,5 +187,4 @@ class ExpansionParser extends Parser
             'related' => $related,
         ];
     }
-
 }

@@ -4,9 +4,9 @@ namespace Marcelgwerder\ApiHandler\Tests\Parsers;
 
 use Foo\Bar\EloquentModelStub;
 use Foo\Bar\RelatedEloquentModelStub;
+use Marcelgwerder\ApiHandler\Tests\TestCase;
 use Marcelgwerder\ApiHandler\Facades\ApiHandler;
 use Marcelgwerder\ApiHandler\Parsers\ExpansionParser;
-use Marcelgwerder\ApiHandler\Tests\TestCase;
 
 class ExpansionParserTest extends TestCase
 {

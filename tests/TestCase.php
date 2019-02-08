@@ -2,9 +2,9 @@
 
 namespace Marcelgwerder\ApiHandler\Tests;
 
-use Marcelgwerder\ApiHandler\ApiHandlerServiceProvider;
-use Marcelgwerder\ApiHandler\Facades\ApiHandler;
 use Illuminate\Http\Request;
+use Marcelgwerder\ApiHandler\Facades\ApiHandler;
+use Marcelgwerder\ApiHandler\ApiHandlerServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -29,12 +29,12 @@ class TestCase extends \Orchestra\Testbench\TestCase
         ];
     }
 
-    protected function createRequestStubForValue($param) {
+    protected function createRequestStubForValue($param)
+    {
         $stub = $this->createMock(Request::class);
         $stub->expects($this->any())->method('has')->willReturn(true);
         $stub->expects($this->any())->method('input')->willReturn($param);
 
         return $stub;
     }
-
 }
