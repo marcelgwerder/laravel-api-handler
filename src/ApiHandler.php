@@ -278,21 +278,6 @@ class ApiHandler
     }
 
     /**
-     * Define the columns that should be sortable.
-     *
-     * @param  array|string|dynamic  $sortables
-     * @return $this
-     */
-    public function sortable($sortables): self
-    {
-        $sortables = is_array($sortables) ? $sortables : [$sortables];
-
-        $this->config->set('sortable', $sortables);
-
-        return $this;
-    }
-
-    /**
      * Apply all the parameters of the request to the builder instance.
      *
      * @return $this
