@@ -2,6 +2,7 @@
 use Mockery as m;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Query\Expression;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use \Illuminate\Http\JsonResponse;
 use \Illuminate\Support\Facades\Config;
 use \Illuminate\Support\Facades\Input;
@@ -20,6 +21,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             '_fields' => 'title,description,comments.title,user.first_name',
             //Filters
             'title-lk' => 'Example Title|Another Title',
+            'description-lk' => '*aaa*bbb*',
             'title' => 'Example Title',
             'title-not-lk' => 'Example Title',
             'title-not' => 'Example Title|Another Title',
@@ -88,7 +90,7 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
             ->with('Something to search')->andReturn('Something to search');
 
         //Mock the connection the same way as laravel does:
-        //tests/Database/DatabaseEloquentBuilderTest.php#L408-L418 (mockConnectionForModel($model, $database))
+        //tests/Database/DatabaseEloquentBuilderTest.php#L1187-L1198 (mockConnectionForModel($model, $database))
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
         $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
@@ -97,6 +99,10 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $connection->shouldReceive('raw')->once()->with('MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
                    ->andReturn($this->fulltextSelectExpression);
         $connection->shouldReceive('getPdo')->once()->andReturn($pdo);
+        $connection->shouldReceive('query')->andReturnUsing(function () use ($connection, $grammar, $processor) {
+            return new BaseBuilder($connection, $grammar, $processor);
+        });
+        $connection->shouldReceive('getName')->andReturn('myConnection');
 
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
 
@@ -167,6 +173,9 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => '=', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
         //assert for title-not-lk
         $this->assertContains(['type' => 'Basic', 'column' => 'posts.title', 'operator' => 'NOT LIKE', 'value' => 'Example Title', 'boolean' => 'and'], $wheres);
+
+        //assert for description-lk
+        $this->assertContains(['type' => 'Basic', 'column' => 'posts.description', 'operator' => 'LIKE', 'value' => '%aaa%bbb%', 'boolean' => 'and'], $wheres);
 
         //assert for id-min
         $this->assertContains(['type' => 'Basic', 'column' => 'posts.id', 'operator' => '>=', 'value' => 5, 'boolean' => 'and'], $wheres);

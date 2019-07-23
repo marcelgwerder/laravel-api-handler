@@ -213,7 +213,7 @@ class Parser
                 } else {
                     $primaryKey = $this->getQualifiedColumnName('id');
                 }
-                
+
                 $this->query->where($primaryKey, $identification);
             }
         }
@@ -377,7 +377,7 @@ class Parser
                 $relationType = $this->getRelationType($relation);
 
                 if ($relationType === 'BelongsTo') {
-                    $firstKey = $relation->getQualifiedForeignKey();
+                    $firstKey = $relation->getQualifiedForeignKeyName();
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
@@ -553,7 +553,7 @@ class Parser
                     $this->query->where(function ($query) use ($column, $comparator, $values) {
                         foreach ($values as $value) {
                             if ($comparator == 'LIKE' || $comparator == 'NOT LIKE') {
-                                $value = preg_replace('/(^\*|\*$)/', '%', $value);
+                                $value = str_replace('*','%',$value);
                             }
 
                             //Link the filters with AND of there is a "not" and with OR if there's none
@@ -568,7 +568,7 @@ class Parser
                     $value = $values[0];
 
                     if ($comparator == 'LIKE' || $comparator == 'NOT LIKE') {
-                        $value = preg_replace('/(^\*|\*$)/', '%', $value);
+                        $value = str_replace('*','%',$value);
                     }
 
                     if ($comparator == 'NULL' || $comparator == 'NOT NULL') {
@@ -736,7 +736,7 @@ class Parser
      */
     protected function getQualifiedColumnName($column, $table = null)
     {
-        //Check whether there is a matching column expression that contains an 
+        //Check whether there is a matching column expression that contains an
         //alias and should therefore not be turned into a qualified column name.
         $isAlias = count(array_filter($this->query->columns ?: [], function($queryColumn) use ($column) {
             return preg_match('/.*[\s\'"`]as\s*[\s\'"`]' . $column . '[\'"`]?$/', trim($queryColumn));
