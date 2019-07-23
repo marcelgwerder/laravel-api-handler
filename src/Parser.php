@@ -377,7 +377,10 @@ class Parser
                 $relationType = $this->getRelationType($relation);
 
                 if ($relationType === 'BelongsTo') {
-                    $firstKey = $relation->getQualifiedForeignKeyName();
+                    // Compatibility for Laravel < 5.8
+                    $firstKey = (method_exists($relation, 'getQualifiedForeignKeyName'))
+                        ? $relation->getQualifiedForeignKeyName()
+                        : $relation->getQualifiedForeignKey();
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
