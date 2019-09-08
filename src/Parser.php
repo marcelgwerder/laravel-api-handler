@@ -377,29 +377,16 @@ class Parser
                 $relationType = $this->getRelationType($relation);
 
                 if ($relationType === 'BelongsTo') {
-                    $firstKey = $relation->getQualifiedForeignKey();
+                    $firstKey = $relation->getQualifiedForeignKeyName();
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
-                    if (method_exists($relation, 'getQualifiedForeignKeyName')) {
-                        $secondKey = $relation->getQualifiedForeignKeyName();
-                    } else {
-                        // compatibility for laravel < 5.4
-                        $secondKey = $relation->getForeignKey();
-                    }
+                    $secondKey = $relation->getQualifiedForeignKeyName();
                 } else if ($relationType === 'BelongsToMany') {
                     $firstKey = $relation->getQualifiedParentKeyName();
                     $secondKey = $relation->getRelated()->getQualifiedKeyName();
                 } else if ($relationType === 'HasManyThrough') {
-                    if (method_exists($relation, 'getQualifiedLocalKeyName')) {
-                        $firstKey = $relation->getQualifiedLocalKeyName();
-                    } else if (method_exists($relation, 'getExistenceCompareKey')) {
-                        // compatibility for laravel 5.4
-                        $firstKey = $relation->getExistenceCompareKey();
-                    } else {
-                        // compatibility for laravel < 5.4
-                        $firstKey = $relation->getHasCompareKey();
-                    }
+                    $firstKey = $relation->getQualifiedLocalKeyName();
                     $secondKey = null;
                 } else {
                     die('Relation type not supported!');
