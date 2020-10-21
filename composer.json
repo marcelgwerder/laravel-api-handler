@@ -2,22 +2,21 @@
     "name": "betalabs/laravel-api-handler",
     "description": "Package providing helper functions for a Laravel REST-API ",
     "keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
-    "homepage": "http://github.com/marcelgwerder/laravel-api-handler",
     "license": "MIT",
     "authors": [
         {
-            "name": "Marcel Gwerder",
-            "email": "info@marcelgwerder.ch"
+            "name": "Betalabs",
+            "email": "betalabs@betalabs.com.br"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "~5.0|^6.0|^7.0",
-        "illuminate/database": "~5.0|^6.0|^7.0",
-        "illuminate/http": "~5.0|^6.0|^7.0"
+        "php": ">=7.3.0",
+        "illuminate/support": "^8.0",
+        "illuminate/database": "^8.0",
+        "illuminate/http": "^8.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.5",
+        "phpunit/phpunit": "^9.0",
         "mockery/mockery": "~0.9"
     },
     "autoload": {
