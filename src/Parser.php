@@ -280,9 +280,7 @@ class Parser
         $reserved = array_fill_keys($this->functions, true);
         $prefix = $this->prefix;
 
-        $filterParams = array_diff_ukey($this->params, $reserved, function ($a, $b) use ($prefix) {
-            return $a != $prefix.$b;
-        });
+        $filterParams = array_diff_ukey($this->params, $reserved, static fn ($a, $b): int => $a <=> $prefix.$b);
 
         if (count($filterParams) > 0) {
             return $filterParams;
